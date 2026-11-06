@@ -1,0 +1,30 @@
+# Kite x402 Service Manifest — conforms to gokite-ai/kite-x402-services/schema/service.schema.json
+name: brokr-wholesale-diligence
+title: Brokr — Mandate-Bound Counterparty & Smart-Contract Diligence Desk
+summary: Multi-vendor DNS, EVM contract, and open-source intelligence dossier verified by SERV Reasoning (serv_prompt_guard + serv_shadow_agent) and deterministic citation checks.
+category: security-and-diligence
+protocol: x402
+x402Version: 2
+scheme: exact
+networks:
+  - eip155:2366
+  - eip155:2368
+facilitator: https://facilitator.pieverse.io/v2
+discovery: /.well-known/x402
+endpoints:
+  - path: /api/x402/procure
+    methods: [GET, POST]
+    priceUsd: "0.05"
+    description: Procures 3 live upstream x402 telemetry feeds under bounded session caps, cross-examines findings via SERV Reasoning, verifies every field citation, and returns a SHA-256-attested dossier.
+  - path: /api/x402/vendors/registry-audit
+    methods: [GET]
+    priceUsd: "0.005"
+    description: Live Google DNS-over-HTTPS (A, MX, SPF) and HTTPS reachability probe.
+  - path: /api/x402/vendors/contract-telemetry
+    methods: [GET]
+    priceUsd: "0.006"
+    description: Live Kite Chain & Base JSON-RPC bytecode, nonce, and ERC-20 token verification.
+  - path: /api/x402/vendors/osint-brief
+    methods: [GET]
+    priceUsd: "0.006"
+    description: Live GitHub repository & organization telemetry distilled via Dolphin DeepSeek-V4.1-Flash.
