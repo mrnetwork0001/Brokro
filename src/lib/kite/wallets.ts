@@ -44,3 +44,39 @@ export function createKiteX402Signer(
   });
   return toClientEvmSigner(account, publicClient);
 }
+
+/**
+ * Builds an x402 signer for ANY authorized settlement chain, so the same agent
+ * identity that shops on Kite can also pay a Base-priced external merchant
+ * without ever leaving its mandate.
+ */
+export function createX402SignerForChain(params: {
+  chain: Parameters<typeof createPublicClient>[0]["chain"];
+  rpcUrl: string;
+}): ClientEvmSigner {
+  const account = getBuyerAccount();
+  const publicClient = createPublicClient({
+    chain: params.chain,
+    transport: http(params.rpcUrl, { timeout: 8_000 }),
+  });
+  return toClientEvmSigner(account, publicClient);
+}
+
+/**
+ * External-merchant settlement mode.
+ *   - "off":      never touch third-party merchants
+ *   - "preflight" (default): probe their real 402 headers and policy-check them,
+ *                  but never sign — nothing of value moves
+ *   - "on":       actually settle real USDC purchases from real merchants
+ *
+ * Defaults to "preflight" so cloning this repo can never spend real money by
+ * accident. Real value only moves when an operator explicitly opts in.
+ */
+export type ExternalSettlementMode = "off" | "preflight" | "on";
+
+export function getExternalSettlementMode(): ExternalSettlementMode {
+  const raw = (process.env.BROKR_EXTERNAL_SETTLEMENT || "preflight").trim().toLowerCase();
+  if (raw === "on" || raw === "live") return "on";
+  if (raw === "off" || raw === "none") return "off";
+  return "preflight";
+}
