@@ -114,6 +114,50 @@ export function recordCompletedRun(run: ProcurementRun): void {
   flushLedger(ledger);
 }
 
+/** A single run by id, for its public receipt permalink. */
+export function getRunById(runId: string): ProcurementRun | undefined {
+  return loadLedger().runs.find((r) => r.runId === runId);
+}
+
+/** Index rows for the public receipt list. */
+export function listReceiptIndex(limit = 50): Array<{
+  runId: string;
+  createdAt: string;
+  status: ProcurementRun["status"];
+  callerType: ProcurementRun["callerType"];
+  title: string;
+  targetEntity: string;
+  verified: boolean;
+  citationsValueMatched: number;
+  citationsChecked: number;
+  settledCount: number;
+  blockedCount: number;
+  spentUsd: number;
+  netMarginUsd: number;
+  digest: string | null;
+  externalMerchantCount: number;
+}> {
+  return loadLedger()
+    .runs.slice(0, limit)
+    .map((r) => ({
+      runId: r.runId,
+      createdAt: r.createdAt,
+      status: r.status,
+      callerType: r.callerType,
+      title: r.mandate.title,
+      targetEntity: r.mandate.targetEntity,
+      verified: Boolean(r.verification?.passed),
+      citationsValueMatched: r.verification?.citationsValueMatched ?? 0,
+      citationsChecked: r.verification?.citationsChecked ?? 0,
+      settledCount: r.receipts.filter((x) => x.outcome === "settled").length,
+      blockedCount: r.receipts.filter((x) => x.outcome === "blocked_policy").length,
+      spentUsd: r.margin.upstreamSpendUsd,
+      netMarginUsd: r.margin.netMarginUsd,
+      digest: r.verification?.receiptDigestSha256 ?? null,
+      externalMerchantCount: r.receipts.filter((x) => x.externalMerchant).length,
+    }));
+}
+
 export function getLedgerSummary() {
   const ledger = loadLedger();
   const netProfitUsd =
