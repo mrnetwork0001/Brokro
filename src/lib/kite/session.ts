@@ -16,7 +16,14 @@
 
 import { randomUUID } from "node:crypto";
 import { verifyMessage } from "viem";
-import type { KiteNetworkId, KitePolicyErrorCode, SessionMode, SessionPolicy } from "../types";
+import type {
+  AuthorizedAsset,
+  KiteNetworkId,
+  KitePolicyErrorCode,
+  SessionMode,
+  SessionPolicy,
+} from "../types";
+import { getSettlementNetwork } from "../x402/settlement-networks";
 import { resolveKiteNetwork } from "./networks";
 
 export interface PolicyEvaluation {
@@ -58,6 +65,12 @@ export function createSessionPolicy(params: {
   allowedHosts: string[];
   passkeyVerified?: boolean;
   walletSignature?: string;
+  /**
+   * Extra CAIP-2 networks this mandate may pay on (e.g. "eip155:8453" to buy
+   * from real Base-priced x402 merchants). The home Kite asset is always
+   * included; anything not listed here is refused before signing.
+   */
+  additionalNetworks?: string[];
 }): SessionPolicy {
   const net = resolveKiteNetwork(params.network);
   const now = Date.now();
@@ -70,6 +83,31 @@ export function createSessionPolicy(params: {
     throw new Error("maxAmountPerTxUsd cannot exceed maxTotalAmountUsd");
   }
 
+  // The home Kite asset is always authorized; extra networks are opt-in per mandate.
+  const allowedAssets: AuthorizedAsset[] = [
+    {
+      caip2Network: net.caip2,
+      assetAddress: net.asset.address,
+      symbol: net.asset.symbol,
+      decimals: net.asset.decimals,
+      realValue: net.id === "mainnet",
+    },
+  ];
+  for (const caip2 of params.additionalNetworks ?? []) {
+    const extra = getSettlementNetwork(caip2);
+    if (!extra) {
+      throw new Error(`Unknown settlement network "${caip2}" requested for session`);
+    }
+    if (allowedAssets.some((a) => a.caip2Network === extra.caip2)) continue;
+    allowedAssets.push({
+      caip2Network: extra.caip2,
+      assetAddress: extra.asset.address,
+      symbol: extra.asset.symbol,
+      decimals: extra.asset.decimals,
+      realValue: extra.realValue,
+    });
+  }
+
   const session: SessionPolicy = {
     sessionId: params.sessionId || `ksess_${randomUUID().slice(0, 12)}`,
     mode: params.mode || "delegated",
@@ -80,6 +118,7 @@ export function createSessionPolicy(params: {
     caip2Network: net.caip2,
     assetSymbol: net.asset.symbol,
     assetAddress: net.asset.address,
+    allowedAssets,
     maxAmountPerTxUsd: roundUsd(params.maxAmountPerTxUsd),
     maxTotalAmountUsd: roundUsd(params.maxTotalAmountUsd),
     spentUsd: 0,
@@ -200,14 +239,35 @@ export function evaluatePaymentAgainstSession(
     }
   }
 
-  if (
-    req.caip2Network.toLowerCase() !== session.caip2Network.toLowerCase() ||
-    req.assetAddress.toLowerCase() !== session.assetAddress.toLowerCase()
-  ) {
+  // A challenge must match one of the exact (network, asset) pairs this mandate
+  // authorized. Sessions created before multi-asset support fall back to the
+  // single home asset rather than silently authorizing everything.
+  const authorizedAssets: AuthorizedAsset[] =
+    session.allowedAssets && session.allowedAssets.length > 0
+      ? session.allowedAssets
+      : [
+          {
+            caip2Network: session.caip2Network,
+            assetAddress: session.assetAddress,
+            symbol: session.assetSymbol,
+            decimals: session.assetSymbol === "pieUSD" ? 18 : 6,
+            realValue: session.caip2Network === "eip155:2366",
+          },
+        ];
+
+  const assetMatch = authorizedAssets.find(
+    (a) =>
+      a.caip2Network.toLowerCase() === req.caip2Network.trim().toLowerCase() &&
+      a.assetAddress.toLowerCase() === req.assetAddress.trim().toLowerCase(),
+  );
+
+  if (!assetMatch) {
     return {
       allowed: false,
       errorCode: "session_asset_forbidden",
-      hint: `Challenge requested ${req.assetAddress} on ${req.caip2Network}, but session only authorizes ${session.assetSymbol} (${session.assetAddress}) on ${session.caip2Network}.`,
+      hint: `Challenge requested ${req.assetAddress} on ${req.caip2Network}, but this mandate only authorizes ${authorizedAssets
+        .map((a) => `${a.symbol} (${a.assetAddress}) on ${a.caip2Network}`)
+        .join(" | ")}.`,
     };
   }
 
