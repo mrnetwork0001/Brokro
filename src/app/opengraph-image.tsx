@@ -48,7 +48,7 @@ export default function OpenGraphImage() {
               B
             </div>
             <span style={{ fontSize: "34px", fontWeight: 700, letterSpacing: "-0.02em" }}>
-              Brokr
+              Brokro
             </span>
           </div>
           <div
@@ -63,7 +63,7 @@ export default function OpenGraphImage() {
               backgroundColor: "#FFFFFF",
             }}
           >
-            SERV Reasoning · Kite Agent Passport · x402
+            Zero-Drain Agent Commerce · SERV · Kite x402
           </div>
         </div>
 
@@ -86,7 +86,7 @@ export default function OpenGraphImage() {
               color: "#4B515C",
             }}
           >
-            Autonomous x402 procurement & wholesale clearinghouse. Screens rogue vendors on SERV, settles inside Kite Passport bounds, verifies every cited field, and earns +60% net margin per call.
+            Pay-only-if-verified x402 clearinghouse. Blocks prompt-injected listings & HTTP 402 price spikes vs. naive bots, verifies 100% of citations, and earns ~50%+ wholesale margin.
           </div>
         </div>
 

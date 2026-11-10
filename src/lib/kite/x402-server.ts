@@ -304,7 +304,8 @@ export async function withX402Gate(
 
   const headers = new Headers(upstreamResponse.headers);
   headers.set("PAYMENT-RESPONSE", encodePaymentResponseHeader(settleHeader));
-  headers.set("X-Brokr-Onchain-Settled", settledOnChain ? "true" : "false");
+  headers.set("X-Brokro-Onchain-Settled", settledOnChain ? "true" : "false");
+  headers.set("X-Brokro-Escrow-Guarantee", "pay-only-if-verified");
   headers.set("Cache-Control", "private, no-store");
 
   return new Response(upstreamResponse.body, {

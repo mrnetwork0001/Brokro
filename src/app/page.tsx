@@ -35,7 +35,7 @@ export default async function LandingPage() {
       <header className="topbar">
         <div className="brand-lockup">
           <span className="brand-seal">B</span>
-          <span className="brand-name">Brokr</span>
+          <span className="brand-name">Brokro</span>
           <span className="brand-tag">SERV Reasoning · Kite Track</span>
         </div>
 
@@ -57,7 +57,7 @@ export default async function LandingPage() {
             /.well-known/x402 ↗
           </a>
           <Link href="/desk" className="btn btn-sm btn-primary">
-            Launch Desk →
+            Launch Arena &amp; Desk →
           </Link>
         </nav>
       </header>
@@ -68,23 +68,25 @@ export default async function LandingPage() {
           <div className="eyebrow">
             <span>◆ OpenServ Hackathon 02</span>
             <span>·</span>
-            <span>Autonomous x402 Clearinghouse</span>
+            <span>Zero-Drain x402 Commerce &amp; Escrow</span>
           </div>
           <h1 className="hero-title">
             Give an agent a mandate and a <em>spending cap</em>, not your wallet.
           </h1>
           <p className="hero-lede">
-            Too complex to procure with a single API call. Too dangerous to hand an
-            unbounded wallet to a raw prompt. <strong>Brokr</strong> screens untrusted{" "}
-            <span className="mono">x402</span> vendors on{" "}
-            <strong>SERV Reasoning</strong>, pays inside passkey-locked{" "}
-            <strong>Kite Agent Passport</strong> bounds, verifies every cited field
-            before acceptance, and resells verified dossiers at a unit-positive spread.
+            Handing a raw LLM a crypto wallet gets you drained by prompt injections,
+            mid-checkout HTTP <span className="mono">402</span> price spikes, or
+            hallucinated reports. <strong>Brokro</strong> is a zero-drain{" "}
+            <span className="mono">x402</span> firewall and escrow clearinghouse: it
+            proves <strong>SERV Reasoning OFF vs. ON</strong> head-to-head, shops live
+            Kite <span className="mono">ksearch</span> merchants inside passkey session
+            caps, and settles <span className="mono">$0.05</span> wholesale escrow{" "}
+            <strong>only when 100% of cited facts verify</strong>.
           </p>
 
           <div className="hero-actions">
             <Link href="/desk" className="btn btn-primary">
-              Open Clearinghouse Desk →
+              Launch Attack Arena &amp; Desk →
             </Link>
             <a href="#judge-fast-path" className="btn">
               5-Minute Judge Fast Path
@@ -182,8 +184,9 @@ export default async function LandingPage() {
         <p className="section-sub">
           Prompt filters cannot see an HTTP 402 header price spike at checkout, and
           spending caps alone cannot tell if a cheap vendor injected instructions into
-          its payload. Brokr pairs <strong>SERV Reasoning</strong> with{" "}
-          <strong>Kite Agent Passport</strong> so neither failure mode touches funds.
+          its payload. Brokro pairs <strong>SERV Reasoning</strong> with{" "}
+          <strong>Kite Agent Passport</strong> — and withholds seller settlement until
+          every cited claim verifies deterministically.
         </p>
 
         <div className="step-grid">
@@ -244,48 +247,49 @@ export default async function LandingPage() {
         <h2 className="section-heading">Judge Fast Path — Verify Everything in 5 Minutes</h2>
         <div className="grid-3" style={{ marginTop: "24px" }}>
           <div className="sheet">
-            <div className="badge brand" style={{ marginBottom: "10px" }}>
-              1 · Clean Live Procurement
+            <div className="badge bad" style={{ marginBottom: "10px" }}>
+              1 · SERV OFF vs. SERV ON Arena
             </div>
             <h3 style={{ margin: "0 0 8px", fontSize: "18px" }}>
-              Stream the 6-Step SERV Graph
+              Prove Wallet Drain Defense Live
             </h3>
             <p style={{ margin: 0, fontSize: "14px", color: "var(--ink-muted)" }}>
               Open <Link href="/desk" className="link-underline">/desk</Link> and click{" "}
-              <strong>Execute Bounded Procurement</strong>. Watch live Google DNS, Kite/Base
-              EVM RPC, and GitHub/Dolphin probes settle inside a $0.035 Kite session cap
-              with every cited JSON field verified.
+              <strong>Run Head-to-Head Attack Arena</strong>. Watch a naive unguarded
+              LLM fall for <span className="mono">v-rogue-inject</span> &amp; HTTP 402
+              spikes while <strong>Brokro</strong> quarantines both and keeps loss at{" "}
+              <span className="mono">$0.00</span>.
             </p>
           </div>
 
           <div className="sheet">
-            <div className="badge bad" style={{ marginBottom: "10px" }}>
-              2 · Adversarial Rogue Vendors
+            <div className="badge brand" style={{ marginBottom: "10px" }}>
+              2 · Live Kite Ecosystem Firewall
             </div>
             <h3 style={{ margin: "0 0 8px", fontSize: "18px" }}>
-              Trigger Prompt-Hijack &amp; 402 Spike
+              Shop &amp; Screen Real x402 Services
             </h3>
             <p style={{ margin: 0, fontSize: "14px", color: "var(--ink-muted)" }}>
-              Toggle on <strong>Include Rogue Merchants</strong> and run again. Watch{" "}
-              <span className="mono">v-rogue-inject</span> get quarantined in Step 1 and{" "}
-              <span className="mono">v-rogue-spike</span> ($0.003 → $0.085 bait-and-switch)
-              get blocked cold with <span className="mono">session_rule_exceeded</span>{" "}
-              and rerouted automatically.
+              Pre-flight live external <span className="mono">ksearch</span> merchants (
+              <span className="mono">Otto AI</span>,{" "}
+              <span className="mono">PrintMoneyLab</span>,{" "}
+              <span className="mono">IP402</span>) alongside live DNS, Kite/Base EVM RPC,
+              and Dolphin OSINT feeds inside your session cap.
             </p>
           </div>
 
           <div className="sheet">
             <div className="badge ok" style={{ marginBottom: "10px" }}>
-              3 · Live Wholesale Revenue
+              3 · Zero-Hallucination Escrow
             </div>
             <h3 style={{ margin: "0 0 8px", fontSize: "18px" }}>
-              Call Brokr as a Paid x402 Service
+              Pay-Only-If-Verified ($0.05 x402)
             </h3>
             <p style={{ margin: 0, fontSize: "14px", color: "var(--ink-muted)" }}>
-              Click <strong>Test External Buyer ($0.05)</strong> on the desk (or call{" "}
+              Click <strong>Test External Buyer ($0.05)</strong> (or call{" "}
               <span className="mono">POST /api/x402/procure</span> with{" "}
-              <span className="mono">kpass agent:session execute</span>) to verify HTTP 402
-              challenge → EIP-3009 signature → ~59% net gross margin.
+              <span className="mono">kpass agent:session execute</span>). Funds settle only
+              after Step 5 verifies 100% of citations (~59% net spread).
             </p>
           </div>
         </div>

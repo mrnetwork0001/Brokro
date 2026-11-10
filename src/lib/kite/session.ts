@@ -110,7 +110,7 @@ export function buildSessionSignMessage(input: {
 }): string {
   const net = resolveKiteNetwork(input.network);
   return [
-    "Brokr — Kite Agent Spending Session Authorization",
+    "Brokro — Kite Agent Spending Session Authorization",
     `Owner: ${input.ownerAddress}`,
     `Agent: ${input.agentAddress}`,
     `Network: ${net.caip2} (${net.asset.symbol})`,

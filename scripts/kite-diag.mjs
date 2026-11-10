@@ -1,5 +1,5 @@
 /**
- * Live infrastructure diagnostic for Brokr.
+ * Live infrastructure diagnostic for Brokro.
  * Usage: npm run diag
  */
 
@@ -26,7 +26,7 @@ const net = getActiveKiteNetwork();
 const buyer = getBuyerAccount();
 const merchant = getMerchantPayTo();
 
-console.log("── Brokr Live Infrastructure Diagnostic ───────────────────────────");
+console.log("── Brokro Live Infrastructure Diagnostic ──────────────────────────");
 console.log(`Active Kite Network : ${net.name} (${net.caip2}, chainId ${net.chainId})`);
 console.log(`Settlement Asset    : ${net.asset.symbol} (${net.asset.address}, ${net.asset.decimals} decimals)`);
 console.log(`Buyer Session Signer: ${buyer.address}`);

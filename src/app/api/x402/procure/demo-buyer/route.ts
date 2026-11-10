@@ -85,7 +85,8 @@ export async function POST(req: Request) {
     });
 
     const settleHeader = paidRes.headers.get("payment-response");
-    const onChain = paidRes.headers.get("x-brokr-onchain-settled") === "true";
+    const onChain = paidRes.headers.get("x-brokro-onchain-settled") === "true";
+    const escrowGuarantee = paidRes.headers.get("x-brokro-escrow-guarantee") || "pay-only-if-verified";
     const settleDecoded = settleHeader ? decodePaymentResponseHeader(settleHeader) : undefined;
     const txHash = settleDecoded?.transaction || undefined;
     const json = (await paidRes.json()) as Record<string, unknown>;
@@ -97,6 +98,7 @@ export async function POST(req: Request) {
       wholesaleTxHash: txHash ?? null,
       wholesaleExplorerUrl: txHash ? explorerTxUrl(net, txHash) : null,
       onChainSettled: onChain,
+      escrowGuarantee,
       result: json,
     });
   } catch (err) {

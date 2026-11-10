@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type {
+  ArenaBenchmarkResult,
   GuardReport,
+  LiveCatalogProbe,
   ProcurementMandate,
   ProcurementRun,
   ReppoAuditRecord,
@@ -138,6 +140,30 @@ export default function ClearinghouseDeskPage() {
   // Reppo live poller
   const [reppoPolling, setReppoPolling] = useState<boolean>(false);
 
+  // Head-to-Head Attack Arena (SERV OFF vs SERV ON + Kite)
+  const [arenaBusy, setArenaBusy] = useState<boolean>(false);
+  const [arenaResult, setArenaResult] = useState<ArenaBenchmarkResult | null>(null);
+
+  // Live External Kite x402 Ecosystem Pre-flight
+  const [ecosystemBusy, setEcosystemBusy] = useState<boolean>(false);
+  const [ecosystemProbes, setEcosystemProbes] = useState<LiveCatalogProbe[]>([]);
+
+  const handleProbeEcosystem = useCallback(async (capPerTx = 0.015) => {
+    setEcosystemBusy(true);
+    try {
+      const res = await fetch(`/api/ecosystem?maxPerTxUsd=${capPerTx}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const body = (await res.json()) as { probes?: LiveCatalogProbe[] };
+      if (Array.isArray(body.probes)) {
+        setEcosystemProbes(body.probes);
+      }
+    } catch {
+      // Ignore transient probe errors
+    } finally {
+      setEcosystemBusy(false);
+    }
+  }, []);
+
   const loadStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/status", { cache: "no-store" });
@@ -152,7 +178,8 @@ export default function ClearinghouseDeskPage() {
 
   useEffect(() => {
     void loadStatus();
-  }, [loadStatus]);
+    void handleProbeEcosystem();
+  }, [loadStatus, handleProbeEcosystem]);
 
   const handleSelectPreset = (preset: ProcurementMandate) => {
     setSelectedPresetId(preset.id);
@@ -185,7 +212,7 @@ export default function ClearinghouseDeskPage() {
       const symbol = net?.asset.symbol || "pieUSD";
 
       const message = [
-        "Brokr — Kite Agent Spending Session Authorization",
+        "Brokro — Kite Agent Spending Session Authorization",
         `Owner: ${ownerAddress}`,
         `Agent: ${agentAddr}`,
         `Network: ${caip2} (${symbol})`,
@@ -339,6 +366,54 @@ export default function ClearinghouseDeskPage() {
     }
   };
 
+  const handleRunArena = async () => {
+    setArenaBusy(true);
+    setRunError(null);
+    setArenaResult(null);
+    try {
+      const res = await fetch("/api/arena", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          presetId: customMode ? "custom" : selectedPresetId,
+          mandate: {
+            id: customMode ? "custom-mandate" : selectedPresetId,
+            title: customMode
+              ? `Arena Defense — ${targetEntity}`
+              : status?.presets.find((p) => p.id === selectedPresetId)?.title ||
+                `Arena Defense — ${targetEntity}`,
+            targetEntity,
+            targetIdentifier,
+            counterpartyAmountUsd: counterpartyUsd,
+            prompt: mandatePrompt,
+            requiredDimensions: ["domain_posture", "onchain_contract", "osint_activity"],
+          },
+          maxAmountPerTxUsd: maxPerTxUsd,
+          maxTotalAmountUsd: maxTotalUsd,
+        }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        arena?: ArenaBenchmarkResult;
+        error?: string;
+      };
+      if (!res.ok || !data.arena) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      setArenaResult(data.arena);
+      setCompletedRun(data.arena.brokroAgent);
+      setLiveSession(data.arena.brokroAgent.session);
+      setLiveSteps(data.arena.brokroAgent.steps);
+      setLiveGuards(data.arena.brokroAgent.guards);
+      setLiveReceipts(data.arena.brokroAgent.receipts);
+      await loadStatus();
+    } catch (err) {
+      setRunError((err as Error).message);
+    } finally {
+      setArenaBusy(false);
+    }
+  };
+
   const handleTestWholesaleBuyer = async () => {
     setWholesaleBusy(true);
     setWholesaleResult(null);
@@ -426,9 +501,9 @@ export default function ClearinghouseDeskPage() {
         <div className="brand-lockup">
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "12px" }}>
             <span className="brand-seal">B</span>
-            <span className="brand-name">Brokr</span>
+            <span className="brand-name">Brokro</span>
           </Link>
-          <span className="brand-tag">Procurement &amp; Wholesale Desk</span>
+          <span className="brand-tag">Zero-Drain Agent Commerce &amp; Arena</span>
         </div>
 
         <div className="nav-links">
@@ -666,7 +741,7 @@ export default function ClearinghouseDeskPage() {
                 type="button"
                 className="btn btn-primary"
                 style={{ width: "100%", padding: "12px 18px", fontSize: "14.5px" }}
-                disabled={running}
+                disabled={running || arenaBusy}
                 onClick={handleRunProcurement}
               >
                 {running
@@ -678,9 +753,21 @@ export default function ClearinghouseDeskPage() {
 
               <button
                 type="button"
+                className="btn btn-copper"
+                style={{ width: "100%", padding: "10px 16px", fontSize: "13.5px" }}
+                disabled={running || arenaBusy}
+                onClick={handleRunArena}
+              >
+                {arenaBusy
+                  ? "Running SERV OFF vs. SERV ON Battle…"
+                  : "⚔ Run Attack Arena (SERV OFF vs. SERV ON) →"}
+              </button>
+
+              <button
+                type="button"
                 className="btn btn-sm"
                 style={{ width: "100%" }}
-                disabled={walletBusy || running}
+                disabled={walletBusy || running || arenaBusy}
                 onClick={handleSignSessionWithWallet}
               >
                 {walletBusy
@@ -711,15 +798,16 @@ export default function ClearinghouseDeskPage() {
           <section className="sheet">
             <div className="sheet-header">
               <div>
-                <div className="sheet-kicker">3 · Revenue Engine</div>
+                <div className="sheet-kicker">3 · Zero-Hallucination Escrow</div>
                 <h2 className="sheet-title">Wholesale x402 Desk ($0.05)</h2>
               </div>
-              <span className="badge ok">Seller Live</span>
+              <span className="badge ok">Pay-Only-If-Verified</span>
             </div>
             <p style={{ fontSize: "13px", color: "var(--ink-muted)", margin: "0 0 12px" }}>
               External agents pay <span className="mono">POST /api/x402/procure</span>{" "}
-              <strong>$0.0500</strong> via HTTP 402; Brokr procures upstream feeds for
-              ~$0.0170 and pockets the spread.
+              <strong>$0.0500</strong> via HTTP 402; Brokro settles funds{" "}
+              <strong>only after 100% Step-5 verification</strong>, procuring feeds for
+              ~$0.0170 and booking the spread.
             </p>
             <button
               type="button"
@@ -895,6 +983,89 @@ export default function ClearinghouseDeskPage() {
               <strong style={{ color: "var(--bad)" }}>Execution Halted:</strong>{" "}
               <span>{runError}</span>
             </div>
+          )}
+
+          {/* ── Head-to-Head Attack Arena Result Card ────────────────────── */}
+          {arenaResult && (
+            <section className="sheet" style={{ borderColor: "var(--copper)" }}>
+              <div className="sheet-header">
+                <div>
+                  <div className="sheet-kicker">
+                    Head-to-Head Attack Arena · {arenaResult.benchmarkId}
+                  </div>
+                  <h2 className="sheet-title">
+                    SERV OFF (Naive Agent) vs. SERV ON (Brokro + Kite)
+                  </h2>
+                </div>
+                <span className="badge ok">
+                  Saved ${arenaResult.delta.savedUsd.toFixed(4)} ·{" "}
+                  {arenaResult.delta.citationsVerifiedPct}% Verified
+                </span>
+              </div>
+
+              <div className="grid-2" style={{ marginBottom: "12px" }}>
+                <div
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: "8px",
+                    background: "var(--bad-soft)",
+                    border: "1px solid rgba(185, 43, 39, 0.35)",
+                    fontSize: "13px",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
+                    <strong style={{ color: "var(--bad)" }}>Naive Agent · SERV OFF</strong>
+                    <span className="badge bad">{arenaResult.naiveAgent.outcome}</span>
+                  </div>
+                  <div className="mono" style={{ fontSize: "12px", marginBottom: "6px" }}>
+                    Exposure: <strong>${arenaResult.naiveAgent.attemptedSpendUsd.toFixed(4)}</strong>{" "}
+                    (Cap ${arenaResult.sessionCapTotalUsd.toFixed(3)})
+                  </div>
+                  <div style={{ fontSize: "12.5px", color: "var(--ink-muted)" }}>
+                    {arenaResult.naiveAgent.summary}
+                  </div>
+                  {arenaResult.naiveAgent.promptInjectionEvidence && (
+                    <div
+                      className="mono"
+                      style={{
+                        marginTop: "6px",
+                        fontSize: "11px",
+                        padding: "5px 7px",
+                        borderRadius: "4px",
+                        background: "rgba(255,255,255,0.65)",
+                      }}
+                    >
+                      {arenaResult.naiveAgent.promptInjectionEvidence}
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: "8px",
+                    background: "var(--ok-soft)",
+                    border: "1px solid rgba(20, 108, 67, 0.35)",
+                    fontSize: "13px",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
+                    <strong style={{ color: "var(--ok)" }}>Brokro · SERV ON + Kite</strong>
+                    <span className="badge ok">ZERO DRAIN ($0.0000 LOST)</span>
+                  </div>
+                  <div className="mono" style={{ fontSize: "12px", marginBottom: "6px" }}>
+                    Quarantined: <strong>{arenaResult.delta.injectionsQuarantined}</strong> ·
+                    Spikes Blocked: <strong>{arenaResult.delta.spikesBlocked}</strong> ·
+                    Spread: <strong>+${arenaResult.delta.wholesaleNetMarginUsd.toFixed(4)}</strong>
+                  </div>
+                  <div style={{ fontSize: "12.5px", color: "var(--ink-muted)" }}>
+                    `serv_prompt_guard` quarantined poisoned listings in Step 1, Kite
+                    SessionPolicy rejected any HTTP 402 price spike pre-signature, and Step 5
+                    verified {arenaResult.delta.citationsVerifiedPct}% of cited claims.
+                  </div>
+                </div>
+              </div>
+            </section>
           )}
 
           {/* ── 6-Step Streaming SERV Reasoning Graph ───────────────────── */}
@@ -1318,40 +1489,95 @@ export default function ClearinghouseDeskPage() {
             </section>
           )}
 
-          {/* ── Live Kite Passport Catalog Sample (via ksearch) ─────────── */}
-          {status?.kpass.liveCatalogSample && status.kpass.liveCatalogSample.length > 0 && (
+          {/* ── Live Kite Passport Ecosystem & External 402 Firewall ─────── */}
+          {(ecosystemProbes.length > 0 ||
+            (status?.kpass.liveCatalogSample && status.kpass.liveCatalogSample.length > 0)) && (
             <section className="sheet">
               <div className="sheet-header">
                 <div>
                   <div className="sheet-kicker">Live Kite Passport Ecosystem</div>
-                  <h2 className="sheet-title">Discovered via ksearch CLI</h2>
+                  <h2 className="sheet-title">
+                    Third-Party x402 Pre-Flight Firewall (ksearch + Live HTTP 402)
+                  </h2>
                 </div>
-                <span className="badge brand">service-discovery.prod.gokite.ai</span>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  disabled={ecosystemBusy}
+                  onClick={() => void handleProbeEcosystem(maxPerTxUsd)}
+                >
+                  {ecosystemBusy ? "Probing HTTP 402…" : "Re-Probe Live x402 Endpoints"}
+                </button>
               </div>
-              <div className="grid-2">
-                {status.kpass.liveCatalogSample.map((item) => (
-                  <div
-                    key={item.service_id}
-                    style={{
-                      padding: "10px 12px",
-                      border: "1px solid var(--rule)",
-                      borderRadius: "8px",
-                      background: "var(--bg-sheet-solid)",
-                      fontSize: "12.5px",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
-                      <strong>{item.name}</strong>
-                      {item.starting_price?.amount && (
-                        <span className="mono badge ok">${item.starting_price.amount}</span>
-                      )}
+
+              {ecosystemProbes.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "14px" }}>
+                  {ecosystemProbes.map((p) => (
+                    <div
+                      key={p.serviceId}
+                      style={{
+                        padding: "10px 12px",
+                        border: "1px solid var(--rule)",
+                        borderRadius: "8px",
+                        background: "var(--bg-sheet-solid)",
+                        fontSize: "12.5px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" }}>
+                        <strong>{p.name}</strong>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          <span className="mono badge brand">
+                            HTTP {p.httpStatus || "ERR"} · {p.latencyMs}ms
+                          </span>
+                          {p.probedPriceUsd !== null && (
+                            <span className="mono badge ok">${p.probedPriceUsd.toFixed(4)}</span>
+                          )}
+                          <span className={`badge ${p.servGuardPassed ? "ok" : "bad"}`}>
+                            {p.servGuardPassed ? "PromptGuard Clean" : "Blocked"}
+                          </span>
+                          <span className={`badge ${p.kitePolicyAdmitted ? "ok" : "warn"}`}>
+                            {p.kitePolicyAdmitted ? "Session Admitted" : "Session Policy Guarded"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mono" style={{ fontSize: "11px", color: "var(--ink-faint)", marginTop: "4px" }}>
+                        {p.probeEndpoint}
+                        {p.probedNetworks.length > 0 ? ` · Networks: ${p.probedNetworks.join(", ")}` : ""}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--ink-muted)", marginTop: "3px" }}>
+                        {p.kitePolicyReason}
+                      </div>
                     </div>
-                    <div className="mono" style={{ fontSize: "11px", color: "var(--ink-faint)", marginTop: "3px" }}>
-                      {item.base_url}
+                  ))}
+                </div>
+              )}
+
+              {status?.kpass.liveCatalogSample && status.kpass.liveCatalogSample.length > 0 && (
+                <div className="grid-2">
+                  {status.kpass.liveCatalogSample.map((item) => (
+                    <div
+                      key={item.service_id}
+                      style={{
+                        padding: "10px 12px",
+                        border: "1px solid var(--rule)",
+                        borderRadius: "8px",
+                        background: "var(--bg-sheet-solid)",
+                        fontSize: "12.5px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                        <strong>{item.name}</strong>
+                        {item.starting_price?.amount && (
+                          <span className="mono badge ok">${item.starting_price.amount}</span>
+                        )}
+                      </div>
+                      <div className="mono" style={{ fontSize: "11px", color: "var(--ink-faint)", marginTop: "3px" }}>
+                        {item.base_url}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </section>
           )}
         </div>

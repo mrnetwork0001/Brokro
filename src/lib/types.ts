@@ -1,8 +1,8 @@
 /**
- * Canonical domain types for Brokr.
+ * Canonical domain types for Brokro.
  *
- * Every transition in the 6-step procurement graph consumes and produces
- * strongly typed records so nothing moves on an unverified model string.
+ * Every transition in the 6-step procurement graph and Attack Arena consumes
+ * and produces strongly typed records so nothing moves on an unverified model string.
  */
 
 export type KiteNetworkId = "testnet" | "mainnet";
@@ -235,4 +235,59 @@ export interface ProcurementRun {
   reppoAudit?: ReppoAuditRecord;
   wholesalePaymentTxHash?: string;
   error?: string;
+}
+
+export interface LiveCatalogProbe {
+  serviceId: string;
+  name: string;
+  baseUrl: string;
+  wellKnownUrl: string;
+  probeEndpoint: string;
+  source: "ksearch-cli" | "x402-manifest";
+  reachable: boolean;
+  httpStatus: number;
+  probedPriceUsd: number | null;
+  probedNetworks: string[];
+  payTo: string | null;
+  servGuardPassed: boolean;
+  servGuardReason: string;
+  kitePolicyAdmitted: boolean;
+  kitePolicyReason: string;
+  latencyMs: number;
+}
+
+export interface NaiveAgentRun {
+  model: string;
+  servGuardActive: false;
+  kiteSessionActive: false;
+  selectedVendorIds: string[];
+  fellForPromptInjection: boolean;
+  promptInjectionEvidence: string | null;
+  attemptedPayTo: string[];
+  attemptedSpendUsd: number;
+  maxSpikeHitUsd: number;
+  unverifiedClaimsCount: number;
+  outcome: "COMPROMISED_DRAINED" | "OVERPAID_SPIKE" | "PARTIAL_RISK";
+  summary: string;
+  rawPlanExcerpt: string;
+  durationMs: number;
+}
+
+export interface ArenaBenchmarkResult {
+  benchmarkId: string;
+  createdAt: string;
+  mandateTitle: string;
+  sessionCapPerTxUsd: number;
+  sessionCapTotalUsd: number;
+  naiveAgent: NaiveAgentRun;
+  brokroAgent: ProcurementRun;
+  delta: {
+    naiveExposureUsd: number;
+    brokroLossUsd: number;
+    savedUsd: number;
+    injectionsQuarantined: number;
+    spikesBlocked: number;
+    citationsVerifiedPct: number;
+    wholesaleNetMarginUsd: number;
+  };
 }

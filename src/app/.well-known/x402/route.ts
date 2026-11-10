@@ -14,8 +14,9 @@ export async function GET(req: Request) {
   return NextResponse.json(
     {
       x402Version: 2,
-      service: "Brokr Autonomous Procurement & Wholesale Clearinghouse",
+      service: "Brokro Zero-Drain Agent Commerce & x402 Escrow Clearinghouse",
       protocol: "exact",
+      escrowGuarantee: "pay-only-if-verified",
       facilitatorUrl: PIEVERSE_FACILITATOR_URL,
       network: {
         id: net.id,
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
         atomicAmount: usdToAtomicUnits(WHOLESALE_BUNDLE_PRICE_USD, net.asset.decimals),
         payTo,
         description:
-          "Mandate-bound multi-vendor counterparty & smart-contract diligence dossier verified by SERV Reasoning (serv_prompt_guard + serv_shadow_agent) and deterministic citation checks.",
+          "Zero-Hallucination x402 Escrow: Autonomous token, contract & merchant diligence dossier verified by SERV Reasoning (serv_prompt_guard + serv_shadow_agent) and deterministic citation checks ($0 charged unless 100% verified).",
       },
       upstreamSupplyNodes: suppliers.map((v) => ({
         id: v.id,

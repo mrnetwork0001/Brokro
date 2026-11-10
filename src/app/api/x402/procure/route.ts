@@ -21,7 +21,7 @@ async function handleWholesaleProcure(req: Request): Promise<Response> {
     {
       resourceUrl: `${origin}/api/x402/procure`,
       description:
-        "Brokr Wholesale Diligence Endpoint — Mandate-bound multi-vendor procurement verified by SERV Reasoning and deterministic citation checks ($0.05).",
+        "Brokro Zero-Hallucination x402 Escrow — Autonomous agent checkout verified by SERV Reasoning + deterministic citation proof ($0.05; $0 charged if verification fails).",
       priceUsd: WHOLESALE_BUNDLE_PRICE_USD,
       payTo: getMerchantPayTo(),
       network: net,
@@ -94,10 +94,17 @@ async function handleWholesaleProcure(req: Request): Promise<Response> {
 
       recordCompletedRun(run);
 
-      if (run.status === "failed") {
+      if (run.status === "failed" || !run.verification?.passed) {
         return NextResponse.json(
-          { error: "procurement_failed", message: run.error },
-          { status: 502 },
+          {
+            error: "verification_escrow_aborted",
+            escrowSettled: false,
+            message:
+              run.error ||
+              "Step 5 deterministic citation verifier did not pass 100%; EIP-3009 authorization was NOT settled ($0 charged).",
+            verification: run.verification ?? null,
+          },
+          { status: 422 },
         );
       }
 

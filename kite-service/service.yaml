@@ -1,7 +1,7 @@
 # Kite x402 Service Manifest — conforms to gokite-ai/kite-x402-services/schema/service.schema.json
-name: brokr-wholesale-diligence
-title: Brokr — Mandate-Bound Counterparty & Smart-Contract Diligence Desk
-summary: Multi-vendor DNS, EVM contract, and open-source intelligence dossier verified by SERV Reasoning (serv_prompt_guard + serv_shadow_agent) and deterministic citation checks.
+name: brokro-zero-drain-escrow
+title: Brokro — Zero-Drain Agent Commerce & Pay-Only-If-Verified x402 Escrow
+summary: Autonomous multi-vendor token, contract, and merchant firewall verified by SERV Reasoning (serv_prompt_guard + serv_shadow_agent) with zero-hallucination x402 escrow settlement ($0 charged unless 100% verified).
 category: security-and-diligence
 protocol: x402
 x402Version: 2

@@ -1,8 +1,8 @@
 {
-  "name": "brokr",
-  "version": "0.1.0",
+  "name": "brokro",
+  "version": "0.2.0",
   "private": true,
-  "description": "Mandate-bound autonomous procurement and wholesale x402 deal desk built on SERV Reasoning and Kite Agent Passport.",
+  "description": "Brokro — Zero-Drain Agent Commerce, SERV OFF vs. SERV ON Attack Arena & Pay-Only-If-Verified x402 Escrow on SERV Reasoning and Kite Agent Passport.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -20,32 +20,32 @@ export const WHOLESALE_BUNDLE_PRICE_USD = 0.05;
 export const PRESET_MANDATES: ProcurementMandate[] = [
   {
     id: "mandate-kite-supplier",
-    title: "Counterparty & Contract Diligence — Pieverse / Kite Settlement Node",
+    title: "Pre-Swap Token & Agent Wallet Safety Check (Kite / Base)",
     targetEntity: "gokite.ai / gokite-ai",
     targetIdentifier: "0x7aB6f3ed87C42eF0aDb67Ed95090f8bF5240149e",
-    counterpartyAmountUsd: 25_000,
+    counterpartyAmountUsd: 500,
     prompt:
-      "Verify DNS & TLS operational posture for gokite.ai, inspect on-chain bytecode and token state for 0x7aB6f3ed87C42eF0aDb67Ed95090f8bF5240149e on Kite/Base, and audit gokite-ai open-source repository activity before approving a $25,000 USDC supplier settlement.",
+      "Before letting my agent swap $500 USDC or grant checkout approval, screen gokite.ai DNS/TLS posture, inspect on-chain bytecode for 0x7aB6f3ed87C42eF0aDb67Ed95090f8bF5240149e across Kite & Base, and verify active open-source engineering via Dolphin inside a hard x402 cap.",
     requiredDimensions: ["domain_posture", "onchain_contract", "osint_activity"],
   },
   {
     id: "mandate-base-escrow",
-    title: "Pre-Wire Treasury Audit — Autonomous Escrow Counterparty (Base)",
+    title: "Tokenized Asset & Ecosystem Checkout Guard (OpenServ / Base USDC)",
     targetEntity: "openserv.ai / openserv-labs",
     targetIdentifier: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    counterpartyAmountUsd: 50_000,
+    counterpartyAmountUsd: 2500,
     prompt:
-      "Perform multi-vendor technical and on-chain due diligence on openserv.ai, verify the target settlement token/contract 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 on Base, and assess openserv-labs engineering velocity prior to opening a $50,000 automated x402 treasury line.",
+      "Shop verified x402 telemetry feeds to check openserv.ai infrastructure, verify Base USDC settlement contract 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 bytecode & supply, and confirm active GitHub shipping velocity under a strict Kite spending cap.",
     requiredDimensions: ["domain_posture", "onchain_contract", "osint_activity"],
   },
   {
     id: "mandate-vendor-onboarding",
-    title: "API Vendor Onboarding — Unverified x402 Data Provider",
+    title: "Untrusted x402 Merchant & Skill Firewall (Reppo Eval Node)",
     targetEntity: "reppo.ai / reppo-ai",
     targetIdentifier: "0x12343e649e6b2b2b77649DFAb88f103c02F3C78b",
-    counterpartyAmountUsd: 12_500,
+    counterpartyAmountUsd: 1000,
     prompt:
-      "Screen reppo.ai infrastructure DNS/SPF records, inspect EVM address 0x12343e649e6b2b2b77649DFAb88f103c02F3C78b activity and balances, and check public engineering footprint before whitelisting for recurring agent spend.",
+      "Firewall-screen reppo.ai DNS/SPF records, inspect signer address 0x12343e649e6b2b2b77649DFAb88f103c02F3C78b on-chain balance & tx history, and cross-examine engineering activity before whitelisting a recurring Kite session.",
     requiredDimensions: ["domain_posture", "onchain_contract", "osint_activity"],
   },
 ];
@@ -63,7 +63,7 @@ export function buildVendorCatalog(
       id: "v-registry",
       slug: "registry-audit",
       name: "Atlas DNS & Domain Posture Feed",
-      provider: "Brokr Live x402 Supply Node",
+      provider: "Brokro Live x402 Supply Node",
       category: "registry",
       endpoint: `${baseOrigin}/api/x402/vendors/registry-audit`,
       wellKnownUrl: `${baseOrigin}/.well-known/x402`,
@@ -88,7 +88,7 @@ export function buildVendorCatalog(
       id: "v-contract",
       slug: "contract-telemetry",
       name: "Kite & Base EVM Contract Probe",
-      provider: "Brokr Live x402 Supply Node",
+      provider: "Brokro Live x402 Supply Node",
       category: "security",
       endpoint: `${baseOrigin}/api/x402/vendors/contract-telemetry`,
       wellKnownUrl: `${baseOrigin}/.well-known/x402`,
@@ -138,8 +138,8 @@ export function buildVendorCatalog(
     {
       id: "v-reserve",
       slug: "reserve-attestation",
-      name: "Sentinel Fallback Counterparty Node",
-      provider: "Brokr Verified Reserve Node",
+      name: "Sentinel Fallback Attestation Node",
+      provider: "Brokro Verified Reserve Node",
       category: "security",
       endpoint: `${baseOrigin}/api/x402/vendors/reserve-attestation`,
       wellKnownUrl: `${baseOrigin}/.well-known/x402`,
@@ -346,7 +346,7 @@ export async function executeLiveVendorDataProbe(
   if (slug === "osint-brief") {
     const ghHeaders: Record<string, string> = {
       Accept: "application/vnd.github+json",
-      "User-Agent": "Brokr-SERV-Agent/0.1",
+      "User-Agent": "Brokro-SERV-Agent/0.2",
     };
     const [userRes, reposRes] = await Promise.all([
       fetch(`https://api.github.com/users/${encodeURIComponent(githubHandle)}`, {

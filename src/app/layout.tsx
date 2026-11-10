@@ -26,7 +26,7 @@ const siteUrl =
   "http://localhost:3000";
 
 const DESCRIPTION =
-  "Mandate-bound autonomous x402 procurement and wholesale clearinghouse built on SERV Reasoning and Kite Agent Passport. Screens poisoned listings, blocks 402 price spikes, verifies every cited field, and settles on Kite Chain.";
+  "Zero-drain agent commerce and pay-only-if-verified x402 escrow on SERV Reasoning & Kite Agent Passport. Watch SERV OFF vs. SERV ON block prompt-injected vendors and HTTP 402 price spikes in real time.";
 
 export const viewport: Viewport = {
   themeColor: "#f5f4ef",
@@ -35,17 +35,17 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Brokr — Mandate-Bound Autonomous Procurement on SERV & Kite",
+  title: "Brokro — Zero-Drain Agent Commerce & x402 Escrow on SERV & Kite",
   description: DESCRIPTION,
   openGraph: {
     type: "website",
-    siteName: "Brokr",
-    title: "Brokr — Give an agent a mandate and a spending cap, not your wallet.",
+    siteName: "Brokro",
+    title: "Brokro — Give an agent a mandate and a spending cap, not your wallet.",
     description: DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Brokr — Give an agent a mandate and a spending cap, not your wallet.",
+    title: "Brokro — Give an agent a mandate and a spending cap, not your wallet.",
     description: DESCRIPTION,
   },
 };

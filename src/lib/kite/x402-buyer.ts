@@ -305,7 +305,7 @@ export async function procureFromX402Vendor(params: {
     reservation.lease.commit();
 
     const responseHeaderRaw = paidRes.headers.get("payment-response");
-    const onChainHeader = paidRes.headers.get("x-brokr-onchain-settled") === "true";
+    const onChainHeader = paidRes.headers.get("x-brokro-onchain-settled") === "true";
     const decodedSettle = responseHeaderRaw
       ? decodePaymentResponseHeader(responseHeaderRaw)
       : undefined;
