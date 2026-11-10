@@ -9,3 +9,7 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 .brokr-ledger.json
+
+# Next.js 16 auto-generates these agent instruction files on dev/build
+AGENTS.md
+CLAUDE.md
