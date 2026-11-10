@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { DeskRail, type RailSection } from "@/components/DeskRail";
 import type {
   ArenaBenchmarkResult,
   GuardReport,
@@ -84,6 +85,7 @@ function shortHex(val: string, head = 6, tail = 4): string {
 
 export default function ClearinghouseDeskPage() {
   const [status, setStatus] = useState<StatusPayload | null>(null);
+  const [railOpen, setRailOpen] = useState<boolean>(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string>("mandate-kite-supplier");
   const [customMode, setCustomMode] = useState<boolean>(false);
 
@@ -494,6 +496,91 @@ export default function ClearinghouseDeskPage() {
     ? Math.min(100, (activeSession.spentUsd / activeSession.maxTotalAmountUsd) * 100)
     : 0;
 
+  // Everything the mandate turned away: poisoned listings quarantined before
+  // the planner saw them, plus 402 challenges refused before any signature.
+  const refusedCount =
+    activeGuards.filter((g) => !g.admitted).length +
+    activeReceipts.filter((r) => r.outcome === "blocked_policy").length;
+
+  const railSections: RailSection[] = [
+    { id: "sec-mandate", label: "Mandate", icon: "◆" },
+    { id: "sec-limits", label: "Spending limits", icon: "⬡" },
+    { id: "sec-escrow", label: "Escrow desk", icon: "⇄" },
+    { id: "sec-trace", label: "Execution trace", icon: "≡", count: activeSteps.length },
+    { id: "sec-audit", label: "Refusals & receipts", icon: "⊘", count: refusedCount },
+    {
+      id: "sec-dossier",
+      label: "Verified dossier",
+      icon: "✓",
+      count: activeVerification?.citationsValueMatched ?? null,
+    },
+  ];
+
+  // Only offer the ecosystem jump once that section actually exists, so no
+  // rail item ever scrolls to nothing.
+  if (
+    ecosystemProbes.length > 0 ||
+    (status?.kpass.liveCatalogSample && status.kpass.liveCatalogSample.length > 0)
+  ) {
+    railSections.push({
+      id: "sec-ecosystem",
+      label: "Live merchants",
+      icon: "◎",
+      count: ecosystemProbes.length,
+    });
+  }
+
+  const railFooter = (
+    <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+      <Link href="/receipts" className="rail-item" style={{ fontSize: "12.5px" }}>
+        <span className="rail-ico" aria-hidden="true">
+          ▤
+        </span>
+        <span className="rail-label">Published receipts</span>
+      </Link>
+      <Link href="/pricing" className="rail-item" style={{ fontSize: "12.5px" }}>
+        <span className="rail-ico" aria-hidden="true">
+          $
+        </span>
+        <span className="rail-label">Pricing</span>
+      </Link>
+
+      {/* Phone only: the status pills hidden from the top bar live here, so
+          network, balance and kpass state are still one tap away. */}
+      {status && (
+        <div className="rail-status">
+          <div className="rail-status-row">
+            <span>Network</span>
+            <strong>
+              {status.network.name} ({status.network.caip2})
+            </strong>
+          </div>
+          <div className="rail-status-row">
+            <span>Facilitator</span>
+            <strong>{status.facilitator.ok ? "healthy" : "unreachable"}</strong>
+          </div>
+          <div className="rail-status-row">
+            <span>Buyer</span>
+            <strong>{shortHex(status.wallets.buyerAddress)}</strong>
+          </div>
+          <div className="rail-status-row">
+            <span>Balance</span>
+            <strong>
+              {Number(status.wallets.balances.tokenFormatted).toFixed(3)}{" "}
+              {status.network.asset.symbol}
+            </strong>
+          </div>
+          {status.kpass.installed && (
+            <div className="rail-status-row">
+              <span>kpass</span>
+              <strong>{status.kpass.kpassVersion || "ready"}</strong>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="shell">
       {/* ── Desk Header Bar ─────────────────────────────────────────────── */}
@@ -507,6 +594,18 @@ export default function ClearinghouseDeskPage() {
         </div>
 
         <div className="nav-links">
+          <button
+            type="button"
+            className={`burger-btn${railOpen ? " is-open" : ""}`}
+            aria-expanded={railOpen}
+            aria-controls="desk-drawer"
+            aria-label={railOpen ? "Close menu" : "Open menu"}
+            onClick={() => setRailOpen((v) => !v)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
           {status && (
             <>
               <span className="pill" title={status.facilitator.facilitatorUrl}>
@@ -534,16 +633,71 @@ export default function ClearinghouseDeskPage() {
               )}
             </>
           )}
-          <Link href="/" className="btn btn-sm">
-            ← Overview
-          </Link>
         </div>
       </header>
 
-      <div className="desk-layout">
+      <button
+        type="button"
+        className={`drawer-backdrop${railOpen ? " is-open" : ""}`}
+        aria-label="Close menu"
+        tabIndex={railOpen ? 0 : -1}
+        onClick={() => setRailOpen(false)}
+      />
+
+      <div className="app-shell">
+        <DeskRail
+          sections={railSections}
+          footer={railFooter}
+          open={railOpen}
+          onClose={() => setRailOpen(false)}
+        />
+
+        <div className="app-main">
+          {/* ── Live clearing position ───────────────────────────────────── */}
+          <div className="kpi-row">
+            <div className="kpi-card">
+              <span className="kpi-k">Spent / cap</span>
+              <div className="kpi-v">${(activeSession?.spentUsd ?? 0).toFixed(4)}</div>
+              <span className="kpi-sub">
+                of ${(activeSession?.maxTotalAmountUsd ?? maxTotalUsd).toFixed(4)} authorized
+              </span>
+            </div>
+            <div className="kpi-card">
+              <span className="kpi-k">Value-matched citations</span>
+              <div className={`kpi-v${activeVerification?.passed ? " ok" : ""}`}>
+                {activeVerification?.citationsValueMatched ?? 0}
+                <span style={{ fontSize: "17px", opacity: 0.5 }}>
+                  /{activeVerification?.citationsChecked ?? 0}
+                </span>
+              </div>
+              <span className="kpi-sub">
+                {activeVerification
+                  ? activeVerification.passed
+                    ? "settlement released"
+                    : "settlement withheld"
+                  : "no run yet"}
+              </span>
+            </div>
+            <div className="kpi-card">
+              <span className="kpi-k">Refused pre-signature</span>
+              <div className="kpi-v copper">{refusedCount}</div>
+              <span className="kpi-sub">quarantined listings + blocked challenges</span>
+            </div>
+            <div className="kpi-card">
+              <span className="kpi-k">Net this run</span>
+              <div className={`kpi-v${(activeMargin?.netMarginUsd ?? 0) > 0 ? " ok" : ""}`}>
+                {activeMargin ? `$${activeMargin.netMarginUsd.toFixed(4)}` : "—"}
+              </div>
+              <span className="kpi-sub">
+                {activeMargin ? `${activeMargin.grossMarginPct}% gross` : "awaiting a run"}
+              </span>
+            </div>
+          </div>
+
+          <div className="desk-layout">
         {/* ── LEFT COLUMN: Mandate & Session Policy Configurator ────────── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-          <section className="sheet">
+          <section id="sec-mandate" className="sheet">
             <div className="sheet-header">
               <div>
                 <div className="sheet-kicker">1 · Counterparty Mandate</div>
@@ -649,7 +803,7 @@ export default function ClearinghouseDeskPage() {
             </div>
           </section>
 
-          <section className="sheet">
+          <section id="sec-limits" className="sheet">
             <div className="sheet-header">
               <div>
                 <div className="sheet-kicker">2 · Kite Passport Session Bounds</div>
@@ -747,8 +901,8 @@ export default function ClearinghouseDeskPage() {
                 {running
                   ? "Running 6-Step SERV & Kite Graph…"
                   : includeAdversarial
-                    ? "Execute Bounded Procurement (With Attack Test) →"
-                    : "Execute Bounded Procurement →"}
+                    ? "Execute Bounded Procurement (With Attack Test)"
+                    : "Execute Bounded Procurement"}
               </button>
 
               <button
@@ -760,7 +914,7 @@ export default function ClearinghouseDeskPage() {
               >
                 {arenaBusy
                   ? "Running SERV OFF vs. SERV ON Battle…"
-                  : "⚔ Run Attack Arena (SERV OFF vs. SERV ON) →"}
+                  : "⚔ Run Attack Arena (SERV OFF vs. SERV ON)"}
               </button>
 
               <button
@@ -795,7 +949,7 @@ export default function ClearinghouseDeskPage() {
           </section>
 
           {/* ── Wholesale x402 Seller Simulator Card ────────────────────── */}
-          <section className="sheet">
+          <section id="sec-escrow" className="sheet">
             <div className="sheet-header">
               <div>
                 <div className="sheet-kicker">3 · Zero-Hallucination Escrow</div>
@@ -818,7 +972,7 @@ export default function ClearinghouseDeskPage() {
             >
               {wholesaleBusy
                 ? "Negotiating 402 → Fulfilling Bundle…"
-                : "Test External Buyer Call ($0.05 x402) →"}
+                : "Test External Buyer Call ($0.05 x402)"}
             </button>
 
             {wholesaleResult && (
@@ -1069,7 +1223,7 @@ export default function ClearinghouseDeskPage() {
           )}
 
           {/* ── 6-Step Streaming SERV Reasoning Graph ───────────────────── */}
-          <section className="sheet">
+          <section id="sec-trace" className="sheet">
             <div className="sheet-header">
               <div>
                 <div className="sheet-kicker">Auditable Execution Trace</div>
@@ -1177,7 +1331,7 @@ export default function ClearinghouseDeskPage() {
 
           {/* ── Guard Quarantine & x402 Settlement Receipts Table ───────── */}
           {(activeGuards.length > 0 || activeReceipts.length > 0) && (
-            <section className="sheet">
+            <section id="sec-audit" className="sheet">
               <div className="sheet-header">
                 <div>
                   <div className="sheet-kicker">Defense &amp; Settlement Audit</div>
@@ -1305,7 +1459,7 @@ export default function ClearinghouseDeskPage() {
 
           {/* ── Verified Counterparty Dossier & Step-5 Seal ─────────────── */}
           {activeDossier && activeVerification && (
-            <section className="sheet">
+            <section id="sec-dossier" className="sheet">
               <div className="sheet-header">
                 <div>
                   <div className="sheet-kicker">Verified Deliverable</div>
@@ -1492,7 +1646,7 @@ export default function ClearinghouseDeskPage() {
           {/* ── Live Kite Passport Ecosystem & External 402 Firewall ─────── */}
           {(ecosystemProbes.length > 0 ||
             (status?.kpass.liveCatalogSample && status.kpass.liveCatalogSample.length > 0)) && (
-            <section className="sheet">
+            <section id="sec-ecosystem" className="sheet">
               <div className="sheet-header">
                 <div>
                   <div className="sheet-kicker">Live Kite Passport Ecosystem</div>
@@ -1580,6 +1734,8 @@ export default function ClearinghouseDeskPage() {
               )}
             </section>
           )}
+        </div>
+          </div>
         </div>
       </div>
     </div>
