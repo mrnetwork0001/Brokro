@@ -18,6 +18,16 @@ export type KitePolicyErrorCode =
 
 export type SessionMode = "delegated" | "kpass" | "wallet";
 
+/** One (network, asset) pair a mandate permits payment in. */
+export interface AuthorizedAsset {
+  caip2Network: string;
+  assetAddress: string;
+  symbol: string;
+  decimals: number;
+  /** False for testnet play-money, true when a payment moves real value. */
+  realValue: boolean;
+}
+
 export interface SessionPolicy {
   sessionId: string;
   mode: SessionMode;
@@ -28,6 +38,12 @@ export interface SessionPolicy {
   caip2Network: "eip155:2368" | "eip155:2366";
   assetSymbol: "pieUSD" | "USDC.e";
   assetAddress: `0x${string}`;
+  /**
+   * The complete set of (network, asset) pairs this mandate authorizes. A 402
+   * challenge matching none of these is refused with `session_asset_forbidden`
+   * before any signature is produced. The home Kite asset is always first.
+   */
+  allowedAssets: AuthorizedAsset[];
   maxAmountPerTxUsd: number;
   maxTotalAmountUsd: number;
   spentUsd: number;
@@ -116,6 +132,11 @@ export interface SettlementReceipt {
   latencyMs: number;
   timestamp: string;
   payload?: Record<string, unknown>;
+  /** True when the counterparty is an independent third-party x402 business. */
+  externalMerchant?: boolean;
+  /** CAIP-2 chain this purchase actually settled on (may differ from Kite home). */
+  settlementNetwork?: string;
+  settlementAssetSymbol?: string;
 }
 
 export interface CitedFinding {
@@ -141,8 +162,13 @@ export interface SynthesizedDossier {
 export interface VerificationReport {
   passed: boolean;
   citationsChecked: number;
+  /** Findings whose cited `fieldPath` resolved to a real key on the paid payload. */
   citationsResolved: number;
+  /** Findings whose `quotedEvidence` actually restates the resolved value. */
+  citationsValueMatched: number;
   unresolvedCitations: string[];
+  /** Findings that cited a real field but misquoted its value. */
+  misquotedCitations: string[];
   budgetInvariantPassed: boolean;
   perTxInvariantPassed: boolean;
   quarantinedVendorReferenced: boolean;
@@ -264,8 +290,22 @@ export interface NaiveAgentRun {
   fellForPromptInjection: boolean;
   promptInjectionEvidence: string | null;
   attemptedPayTo: string[];
+  /** Sum of the REAL HTTP 402 challenge amounts this plan would have signed. */
   attemptedSpendUsd: number;
   maxSpikeHitUsd: number;
+  /** Observed challenge dollars whose payee is a burn/attacker sink. */
+  fundsDirectedToAttackerUsd: number;
+  /** Whether the poisoned listing entered the agent's planning context at all. */
+  selectedPoisonedVendor: boolean;
+  /** Per-vendor record of what the live 402 header actually demanded. */
+  observedChallenges: Array<{
+    vendorId: string;
+    advertisedUsd: number;
+    challengedUsd: number;
+    payTo: string;
+    /** True when the figure came from a live header rather than the manifest. */
+    headerObserved: boolean;
+  }>;
   unverifiedClaimsCount: number;
   outcome: "COMPROMISED_DRAINED" | "OVERPAID_SPIKE" | "PARTIAL_RISK";
   summary: string;
@@ -283,6 +323,10 @@ export interface ArenaBenchmarkResult {
   brokroAgent: ProcurementRun;
   delta: {
     naiveExposureUsd: number;
+    naiveFundsToAttackerUsd: number;
+    /** What Brokro actually, legitimately spent under its session policy. */
+    brokroAuthorizedSpendUsd: number;
+    /** Measured, not asserted: Brokro dollars that reached a burn sink. */
     brokroLossUsd: number;
     savedUsd: number;
     injectionsQuarantined: number;
