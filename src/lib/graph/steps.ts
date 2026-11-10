@@ -159,6 +159,234 @@ function resolveFieldPath(payload: Record<string, unknown> | undefined, fieldPat
   return { found: cursor !== undefined, value: cursor };
 }
 
+/** Longest quoted-evidence string treated as a paraphrase rather than a literal quote. */
+const QUOTE_LITERAL_THRESHOLD = 120;
+
+/** Relative tolerance allowed when a model re-states a numeric field. */
+const NUMERIC_RELATIVE_TOLERANCE = 0.005;
+
+const TRUTHY_SYNONYMS = [
+  "true",
+  "yes",
+  "present",
+  "configured",
+  "reachable",
+  "enabled",
+  "active",
+  "verified",
+  "is a contract",
+  "does exist",
+];
+
+const FALSY_SYNONYMS = [
+  "false",
+  "no ",
+  "not ",
+  "absent",
+  "missing",
+  "unconfigured",
+  "unreachable",
+  "disabled",
+  "inactive",
+  "none",
+  "is not a contract",
+];
+
+export function stringifyFieldValue(value: unknown): string {
+  if (value === null) return "null";
+  if (value === undefined) return "undefined";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return JSON.stringify(value);
+}
+
+function normalizeText(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/["'`$]/g, "")
+    .replace(/[\s,_]+/g, " ")
+    .trim();
+}
+
+function extractNumbers(input: string): number[] {
+  const matches = input.match(/-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g) ?? [];
+  return matches.map(Number).filter((n) => Number.isFinite(n));
+}
+
+function numbersAgree(claimed: number, actual: number): boolean {
+  if (claimed === actual) return true;
+  const scale = Math.max(Math.abs(actual), Math.abs(claimed), 1);
+  if (Math.abs(claimed - actual) <= scale * NUMERIC_RELATIVE_TOLERANCE) return true;
+  // Accept a correctly rounded restatement (e.g. 0.123456 quoted as "0.1235").
+  for (let dp = 0; dp <= 6; dp++) {
+    if (Number(actual.toFixed(dp)) === claimed) return true;
+  }
+  return false;
+}
+
+export interface EvidenceMatch {
+  matched: boolean;
+  mode: "exact" | "numeric" | "boolean" | "literal-quote" | "collection" | "mismatch";
+  actual: string;
+  reason: string;
+}
+
+/**
+ * Deterministically checks that a dossier finding's `quotedEvidence` actually
+ * restates the value living at the cited `fieldPath` — not merely that the
+ * field exists. A finding that cites a real field and misquotes its value is
+ * rejected exactly like one that invents the field outright.
+ */
+export function evidenceMatchesValue(quotedEvidence: string, value: unknown): EvidenceMatch {
+  const actualRaw = stringifyFieldValue(value);
+  const actual = normalizeText(actualRaw);
+  const quoted = normalizeText(quotedEvidence);
+
+  if (quoted.length === 0) {
+    return {
+      matched: false,
+      mode: "mismatch",
+      actual: actualRaw,
+      reason: "quotedEvidence is empty",
+    };
+  }
+
+  if (quoted === actual) {
+    return { matched: true, mode: "exact", actual: actualRaw, reason: "exact value match" };
+  }
+
+  if (typeof value === "boolean") {
+    const hit = (list: string[]) => list.some((token) => quoted.includes(token));
+    const saysTrue = hit(TRUTHY_SYNONYMS);
+    const saysFalse = hit(FALSY_SYNONYMS);
+    if (saysTrue && !saysFalse) {
+      return value
+        ? { matched: true, mode: "boolean", actual: actualRaw, reason: "affirmative restatement of true" }
+        : {
+            matched: false,
+            mode: "mismatch",
+            actual: actualRaw,
+            reason: "evidence asserts true but field is false",
+          };
+    }
+    if (saysFalse && !saysTrue) {
+      return value
+        ? {
+            matched: false,
+            mode: "mismatch",
+            actual: actualRaw,
+            reason: "evidence asserts false but field is true",
+          }
+        : { matched: true, mode: "boolean", actual: actualRaw, reason: "negative restatement of false" };
+    }
+    return {
+      matched: false,
+      mode: "mismatch",
+      actual: actualRaw,
+      reason: "evidence does not unambiguously restate the boolean field",
+    };
+  }
+
+  if (typeof value === "number") {
+    const claimedNumbers = extractNumbers(quotedEvidence);
+    if (claimedNumbers.length === 0) {
+      return {
+        matched: false,
+        mode: "mismatch",
+        actual: actualRaw,
+        reason: "evidence cites a numeric field but states no number",
+      };
+    }
+    if (claimedNumbers.some((n) => numbersAgree(n, value))) {
+      return { matched: true, mode: "numeric", actual: actualRaw, reason: "numeric value agrees" };
+    }
+    return {
+      matched: false,
+      mode: "mismatch",
+      actual: actualRaw,
+      reason: `evidence states ${claimedNumbers.join("/")} but field is ${value}`,
+    };
+  }
+
+  if (Array.isArray(value)) {
+    const elements = value.map((el) => normalizeText(stringifyFieldValue(el))).filter(Boolean);
+    if (elements.length === 0) {
+      return quoted.includes("none") || quoted.includes("empty") || quoted.includes("[]")
+        ? { matched: true, mode: "collection", actual: actualRaw, reason: "empty collection restated" }
+        : {
+            matched: false,
+            mode: "mismatch",
+            actual: actualRaw,
+            reason: "field is an empty array but evidence claims contents",
+          };
+    }
+    const present = elements.filter((el) => quoted.includes(el));
+    if (present.length === elements.length) {
+      return { matched: true, mode: "collection", actual: actualRaw, reason: "all elements quoted" };
+    }
+    if (present.length > 0 && quoted.includes(String(elements.length))) {
+      return {
+        matched: true,
+        mode: "collection",
+        actual: actualRaw,
+        reason: "representative element plus correct count quoted",
+      };
+    }
+    return {
+      matched: false,
+      mode: "mismatch",
+      actual: actualRaw,
+      reason: `evidence quotes ${present.length}/${elements.length} array elements`,
+    };
+  }
+
+  // Long free-text fields (e.g. analysisSummary) must be quoted literally.
+  if (typeof value === "string" && actualRaw.length > QUOTE_LITERAL_THRESHOLD) {
+    if (actual.includes(quoted)) {
+      return {
+        matched: true,
+        mode: "literal-quote",
+        actual: actualRaw,
+        reason: "evidence is a literal substring of the cited field",
+      };
+    }
+    return {
+      matched: false,
+      mode: "mismatch",
+      actual: actualRaw,
+      reason: "evidence is not a literal quote of the long-form field",
+    };
+  }
+
+  if (actual.length > 0 && quoted.includes(actual)) {
+    return {
+      matched: true,
+      mode: "literal-quote",
+      actual: actualRaw,
+      reason: "field value appears verbatim inside the evidence",
+    };
+  }
+  if (quoted.length > 0 && actual.includes(quoted)) {
+    return {
+      matched: true,
+      mode: "literal-quote",
+      actual: actualRaw,
+      reason: "evidence is a literal substring of the field value",
+    };
+  }
+
+  return {
+    matched: false,
+    mode: "mismatch",
+    actual: actualRaw,
+    reason: "evidence does not restate the cited field value",
+  };
+}
+
+function truncateForNote(input: string, max = 90): string {
+  return input.length > max ? `${input.slice(0, max)}…` : input;
+}
+
 /**
  * Pure deterministic Step 5 verifier. Never calls a model: plain code checks
  * every citation, field path, quarantined vendor exclusion, and Kite spend cap.
@@ -181,7 +409,9 @@ export function verifyDossierDeterministically(params: {
   );
 
   const unresolvedCitations: string[] = [];
+  const misquotedCitations: string[] = [];
   let citationsResolved = 0;
+  let citationsValueMatched = 0;
   let quarantinedVendorReferenced = false;
 
   for (const f of dossier.findings) {
@@ -210,6 +440,18 @@ export function verifyDossierDeterministically(params: {
     }
 
     citationsResolved += 1;
+
+    // A real field path is not enough: the quoted evidence must restate the
+    // value that actually came back from the paid upstream call.
+    const evidence = evidenceMatchesValue(f.quotedEvidence, resolved.value);
+    if (!evidence.matched) {
+      misquotedCitations.push(
+        `${f.findingId}: quotedEvidence "${truncateForNote(f.quotedEvidence)}" does not match ${f.vendorId}.${f.fieldPath} = "${truncateForNote(evidence.actual)}" (${evidence.reason})`,
+      );
+      continue;
+    }
+
+    citationsValueMatched += 1;
   }
 
   const totalSettled =
@@ -231,10 +473,17 @@ export function verifyDossierDeterministically(params: {
     dossier.executiveDecision === "proceed" && nonIndeterminateCount === 0;
 
   const notes: string[] = [];
-  if (unresolvedCitations.length === 0) {
-    notes.push(`All ${dossier.findings.length} cited findings resolved against paid x402 payloads.`);
+  if (unresolvedCitations.length === 0 && misquotedCitations.length === 0) {
+    notes.push(
+      `All ${dossier.findings.length} cited findings resolved to a real field AND their quoted evidence matched the raw upstream value byte-for-byte or within rounding.`,
+    );
   } else {
-    notes.push(`Unresolved citations: ${unresolvedCitations.join("; ")}`);
+    if (unresolvedCitations.length > 0) {
+      notes.push(`Unresolved citations: ${unresolvedCitations.join("; ")}`);
+    }
+    if (misquotedCitations.length > 0) {
+      notes.push(`Misquoted citations: ${misquotedCitations.join("; ")}`);
+    }
   }
   if (budgetInvariantPassed && perTxInvariantPassed) {
     notes.push(
@@ -252,6 +501,7 @@ export function verifyDossierDeterministically(params: {
     headline: dossier.headline,
     executiveDecision: dossier.executiveDecision,
     riskScore: dossier.riskScore,
+    citationsValueMatched,
     findings: dossier.findings,
     receipts: receipts.map((r) => ({
       vendorId: r.vendorId,
@@ -265,6 +515,8 @@ export function verifyDossierDeterministically(params: {
 
   const passed =
     unresolvedCitations.length === 0 &&
+    misquotedCitations.length === 0 &&
+    citationsValueMatched === dossier.findings.length &&
     budgetInvariantPassed &&
     perTxInvariantPassed &&
     !quarantinedVendorReferenced &&
@@ -274,7 +526,9 @@ export function verifyDossierDeterministically(params: {
     passed,
     citationsChecked: dossier.findings.length,
     citationsResolved,
+    citationsValueMatched,
     unresolvedCitations,
+    misquotedCitations,
     budgetInvariantPassed,
     perTxInvariantPassed,
     quarantinedVendorReferenced,
@@ -712,8 +966,8 @@ export async function executeProcurementGraph(params: {
       completedAt: new Date().toISOString(),
       durationMs: Math.max(1, Date.now() - s5Start),
       summary: verification.passed
-        ? `Verified ${verification.citationsResolved}/${verification.citationsChecked} citations & Kite spend caps · SHA-256 ${verification.receiptDigestSha256.slice(0, 12)}…`
-        : `Verifier flagged dossier: ${verification.unresolvedCitations.join("; ")}`,
+        ? `Value-matched ${verification.citationsValueMatched}/${verification.citationsChecked} citations against raw upstream JSON & Kite spend caps · SHA-256 ${verification.receiptDigestSha256.slice(0, 12)}…`
+        : `Verifier blocked settlement: ${[...verification.unresolvedCitations, ...verification.misquotedCitations].join("; ")}`,
       detail: verification,
     });
 
