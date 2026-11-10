@@ -62,17 +62,44 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * The survey field. One continuous drifting diagonal tick texture behind the
+ * entire app — the same field the hero sits on, extended so every section
+ * shares it and no seam appears between them.
+ */
 .drafting-backdrop {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
   background-image:
-    radial-gradient(ellipse 80% 50% at 15% -5%, rgba(20, 54, 66, 0.06), transparent 60%),
-    radial-gradient(ellipse 65% 45% at 90% 10%, rgba(168, 75, 32, 0.05), transparent 55%),
-    linear-gradient(to right, rgba(20, 54, 66, 0.028) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(20, 54, 66, 0.028) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+    radial-gradient(ellipse 80% 50% at 15% -5%, rgba(20, 54, 66, 0.055), transparent 60%),
+    radial-gradient(ellipse 65% 45% at 90% 10%, rgba(168, 75, 32, 0.05), transparent 55%);
+}
+
+.drafting-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background-image: repeating-linear-gradient(
+    115deg,
+    var(--copper-soft) 0px,
+    var(--copper-soft) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+  opacity: 0.7;
+  animation: tick-drift 38s linear infinite;
+}
+
+@keyframes tick-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(0, 94px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drafting-backdrop::before { animation: none; }
 }
 
 a {
@@ -83,9 +110,11 @@ a {
 .shell {
   position: relative;
   z-index: 1;
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 0 28px 80px;
+  /* Content column spans ~92% of the viewport, leaving 4% whitespace each
+     side. Floored at 16px on phones so it never collapses. */
+  max-width: none;
+  margin: 0;
+  padding: 0 max(16px, 4%) 80px;
 }
 
 .mono {
@@ -104,7 +133,10 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 0;
+  /* The header breaks out of .shell's 4% gutter and sits at 2% instead —
+     half the body's side margin — so the nav runs wider than the content. */
+  margin-inline: calc(50% - 50vw);
+  padding: 20px max(16px, 2%);
   border-bottom: 1px solid var(--rule);
   flex-wrap: wrap;
 }
@@ -661,4 +693,1043 @@ a {
   color: var(--brand);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HERO — the mandate perimeter, drawn in the house palette.
+
+   Limestone canvas, Prussian ink, copper boundary, moss-green admittance.
+   A signed boundary; a sweep testing every merchant against it; authorized
+   requests travelling inward; refused ones thrown back out.
+   Pure CSS/SVG motion — no JS, no video, no animation library.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/*
+ * The hero reads as a lit clearing on the shared survey field: a soft white
+ * wash behind the headline, with the global tick texture showing through.
+ * It draws no texture of its own — that lives on .drafting-backdrop so the
+ * field stays continuous from the hero through to the footer.
+ */
+.hero-stage {
+  position: relative;
+  margin-inline: calc(50% - 50vw);
+  padding: 0 max(16px, 4%);
+  background:
+    radial-gradient(120% 86% at 68% 36%, rgba(255, 255, 255, 0.8) 0%, transparent 64%),
+    linear-gradient(180deg, rgba(245, 244, 239, 0.35) 0%, rgba(236, 234, 226, 0.55) 100%);
+  border-bottom: 1px solid var(--rule);
+}
+
+.hero-stage-inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1.04fr 0.96fr;
+  gap: 48px;
+  align-items: center;
+  padding: 28px 0 44px;
+}
+
+@media (max-width: 1040px) {
+  .hero-stage-inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 22px 0 30px;
+  }
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 24px;
+}
+
+.hero-eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  animation: live-pulse 2.2s ease-out infinite;
+}
+
+@keyframes live-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(20, 108, 67, 0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(20, 108, 67, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(20, 108, 67, 0); }
+}
+
+.hero-h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(40px, 5.2vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.022em;
+  font-weight: 500;
+  margin: 0 0 24px;
+  color: var(--ink);
+}
+
+.hero-h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--copper);
+}
+
+.hero-sub {
+  font-size: 17px;
+  line-height: 1.62;
+  color: var(--ink-muted);
+  max-width: 50ch;
+  margin: 0 0 30px;
+}
+
+.hero-sub strong { color: var(--ink); font-weight: 600; }
+
+.hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex-wrap: wrap;
+}
+
+.btn-hero {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
+  color: #f7f6f1;
+  font-weight: 600;
+  font-size: 15px;
+  border: 1px solid var(--brand);
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.btn-hero:hover { background: #1b4654; transform: translateY(-1px); }
+
+.btn-hero-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 22px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sheet-solid);
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 15px;
+  border: 1px solid var(--rule-strong);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.btn-hero-ghost:hover { border-color: var(--ink-faint); transform: translateY(-1px); }
+
+.hero-link {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-faint);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-strong);
+  padding-bottom: 2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.hero-link:hover { color: var(--copper); border-color: var(--copper); }
+
+/* ── The perimeter ───────────────────────────────────────────────────── */
+
+.perimeter-wrap {
+  position: relative;
+  /* Room for the radar to read at full size without stretching the hero
+     row; the decision log now sits below it rather than over it. */
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+@media (max-width: 1040px) {
+  .perimeter-wrap { margin-inline: auto; }
+}
+
+.perimeter { width: 100%; height: auto; display: block; overflow: visible; }
+
+.ring {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.ring-dashed {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  stroke-dasharray: 2 7;
+}
+
+/* The signed boundary. */
+.ring-mandate {
+  fill: none;
+  stroke: var(--copper);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+  opacity: 0.8;
+  animation: mandate-rotate 52s linear infinite;
+  transform-origin: 250px 250px;
+}
+
+@keyframes mandate-rotate { to { transform: rotate(360deg); } }
+
+.sweep {
+  transform-origin: 250px 250px;
+  animation: sweep-rotate 7s linear infinite;
+}
+
+@keyframes sweep-rotate { to { transform: rotate(360deg); } }
+
+.sweep-fan { fill: url(#sweepGrad); }
+
+.sweep-edge { stroke: var(--copper); stroke-width: 1.2; opacity: 0.8; }
+
+.node-core { r: 4.5; }
+.node-ok   { fill: var(--ok); }
+.node-no   { fill: var(--copper); }
+
+.node-halo { fill: none; stroke-width: 1.2; opacity: 0; }
+.node-halo-ok { stroke: var(--ok); }
+.node-halo-no { stroke: var(--copper); }
+
+.flare { animation: node-flare 7s ease-out infinite; }
+
+@keyframes node-flare {
+  0%, 100% { opacity: 0; r: 4.5; }
+  4%       { opacity: 0.8; r: 4.5; }
+  15%      { opacity: 0; r: 19; }
+}
+
+.pulse { animation: node-pulse 7s ease-out infinite; }
+
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.68; }
+  4%       { opacity: 1; }
+  22%      { opacity: 0.68; }
+}
+
+.repel { animation: node-repel 7s ease-out infinite; }
+
+@keyframes node-repel {
+  0%, 100% { transform: translate(0, 0); opacity: 0.55; }
+  5%       { opacity: 1; }
+  14%      { transform: translate(var(--rx, 7px), var(--ry, -5px)); opacity: 0.9; }
+  32%      { transform: translate(0, 0); opacity: 0.55; }
+}
+
+.inbound {
+  r: 3.2;
+  fill: var(--ok);
+}
+
+@keyframes inbound-run {
+  0%   { offset-distance: 0%;   opacity: 0; }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+.in-a { offset-path: path("M 96 148 L 250 250");  animation: inbound-run 7s cubic-bezier(.45,0,.55,1) infinite 0.4s; }
+.in-b { offset-path: path("M 404 176 L 250 250"); animation: inbound-run 7s cubic-bezier(.45,0,.55,1) infinite 2.6s; }
+.in-c { offset-path: path("M 168 404 L 250 250"); animation: inbound-run 7s cubic-bezier(.45,0,.55,1) infinite 4.9s; }
+
+.core-ring { fill: none; stroke: var(--copper); stroke-width: 1.3; }
+
+.core-glow {
+  animation: core-breathe 4.6s ease-in-out infinite;
+  transform-origin: 250px 250px;
+}
+
+@keyframes core-breathe {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50%      { opacity: 0.6; transform: scale(1.09); }
+}
+
+.perim-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  fill: var(--ink-faint);
+}
+
+.perim-label-ok { fill: var(--ok); }
+.perim-label-no { fill: var(--copper); }
+
+.perim-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  fill: var(--ink);
+}
+
+.perim-tag-box {
+  fill: var(--bg-sheet-solid);
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+/* ── Live decision log ───────────────────────────────────────────────── */
+
+.decision-log {
+  position: static;
+  width: 100%;
+  margin-top: 14px;
+  background: var(--bg-sheet-solid);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sheet);
+  overflow: hidden;
+}
+
+@media (max-width: 1040px) {
+  .decision-log { position: static; width: 100%; margin-top: 18px; }
+}
+
+.decision-log table { width: 100%; border-collapse: collapse; }
+
+.decision-log th {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: left;
+  padding: 9px 12px 7px;
+  font-weight: 400;
+  border-bottom: 1px solid var(--rule);
+}
+
+.decision-log td {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+.decision-log tr:last-child td { border-bottom: none; }
+
+.log-row { animation: log-in 0.5s ease-out both; }
+
+@keyframes log-in {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.v-ok { color: var(--ok); font-weight: 600; }
+.v-no { color: var(--copper); font-weight: 600; }
+
+/* ── Stats strip ─────────────────────────────────────────────────────── */
+
+.hero-stats {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid var(--rule);
+}
+
+@media (max-width: 1040px) {
+  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+.hero-stat {
+  padding: 22px 20px 24px;
+  border-right: 1px solid var(--rule);
+}
+
+.hero-stat:last-child { border-right: none; }
+
+.hero-stat-v {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.hero-stat-v small {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  margin-left: 5px;
+}
+
+.hero-stat-k {
+  display: block;
+  margin-top: 9px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.hero-foot {
+  position: relative;
+  z-index: 2;
+  padding: 14px 0 22px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stage::before,
+  .ring-mandate,
+  .sweep,
+  .flare,
+  .pulse,
+  .repel,
+  .inbound,
+  .core-glow,
+  .hero-eyebrow-dot,
+  .log-row { animation: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Landing section navigation — in-page wayfinding, not status chrome.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+html { scroll-behavior: smooth; }
+
+.section-block[id],
+.hero-stage[id] { scroll-margin-top: 88px; }
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.site-nav-link {
+  position: relative;
+  padding: 7px 13px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.site-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  right: 13px;
+  bottom: 2px;
+  height: 1px;
+  background: var(--copper);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+
+.site-nav-link:hover {
+  color: var(--ink);
+  background: rgba(17, 19, 23, 0.035);
+}
+
+.site-nav-link:hover::after { transform: scaleX(1); }
+
+@media (max-width: 860px) {
+  .site-nav { gap: 0; }
+  .site-nav-link { padding: 6px 9px; font-size: 12.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* Sticky header: stays available while the page scrolls under it. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(245, 244, 239, 0.86);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   APP SHELL — collapsible rail + working surface.
+
+   The rail is wayfinding, never the only route to anything: the default
+   surface carries the whole run end to end, so a first-time visitor who
+   never touches the rail still sees mandate → refusals → verification →
+   settlement in one scroll.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--rail-w, 248px) 1fr;
+  gap: 26px;
+  align-items: start;
+  margin-top: 20px;
+  transition: grid-template-columns 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The rail owns its collapse state; the grid reacts to it. */
+.app-shell:has(.app-rail.is-collapsed) { --rail-w: 64px; }
+
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: 1fr; }
+}
+
+.app-rail {
+  position: sticky;
+  top: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-sheet);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sheet);
+  padding: 12px 10px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* The rail stays sticky in two columns all the way down to 900px, where
+   it becomes the drawer. No intermediate static/horizontal state. */
+
+.rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.app-rail.is-collapsed .rail-head { justify-content: center; padding: 4px 0 10px; }
+
+.rail-title {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.rail-toggle {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sheet-solid);
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.rail-toggle:hover { border-color: var(--ink-faint); color: var(--ink); }
+
+.rail-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.rail-item:hover { background: rgba(17, 19, 23, 0.04); color: var(--ink); }
+
+.rail-item.is-active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.rail-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--copper);
+}
+
+.rail-ico {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.rail-label { white-space: nowrap; overflow: hidden; }
+
+.app-rail.is-collapsed .rail-label,
+.app-rail.is-collapsed .rail-title,
+.app-rail.is-collapsed .rail-count { display: none; }
+
+.app-rail.is-collapsed .rail-item { justify-content: center; padding: 10px 0; }
+
+.rail-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  background: var(--bg-sunken);
+  border-radius: 20px;
+  padding: 1px 7px;
+}
+
+.rail-foot {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+
+.app-rail.is-collapsed .rail-foot { display: none; }
+
+/* ── KPI row ─────────────────────────────────────────────────────────── */
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 900px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card {
+  background: var(--bg-sheet);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sheet);
+  padding: 16px 18px 18px;
+}
+
+.kpi-k {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+
+.kpi-v {
+  font-family: var(--font-mono);
+  font-size: 27px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.kpi-v.ok { color: var(--ok); }
+.kpi-v.copper { color: var(--copper); }
+
+.kpi-sub {
+  display: block;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+/* Working surface keeps the two-column desk inside the shell. */
+.app-main { min-width: 0; }
+
+.app-main .desk-layout { margin-top: 0; }
+
+.app-section[id] { scroll-margin-top: 96px; }
+
+/* Whole logo lockup is the route home, not just the seal. */
+.brand-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-sm);
+  transition: opacity 0.15s ease;
+}
+
+.brand-home:hover { opacity: 0.72; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE — elitr-style left drawer, clamped panels, scrollable tables.
+   Desktop (≥ 901px) is unchanged.
+
+   Overflow guards apply at ALL widths: grid/flex children default to
+   min-width:auto, so one wide table or a long unbroken hash makes its
+   column wider than the viewport and the whole page scrolls sideways.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/*
+ * `overflow-x: clip`, never `hidden`. `hidden` makes the root a scroll
+ * container, which silently breaks `position: sticky` for every descendant
+ * — the rail and the top bar both stop sticking. `clip` prevents sideways
+ * scroll without creating that container, so sticky keeps working.
+ */
+html,
+body { overflow-x: clip; }
+
+.grid-2 > *,
+.grid-3 > *,
+.step-grid > *,
+.kpi-row > *,
+.hero-stats > *,
+.desk-layout > *,
+.app-shell > *,
+.sheet,
+.kpi-card,
+.app-main,
+.app-rail { min-width: 0; max-width: 100%; }
+
+.sheet,
+.kpi-card { overflow: hidden; }
+
+/* Long hashes, addresses and digests must wrap rather than widen a column. */
+.receipt-table td,
+.ticket-row,
+.kv-row { overflow-wrap: anywhere; }
+
+/* ── Burger ──────────────────────────────────────────────────────────── */
+
+.burger-btn {
+  display: none;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sheet-solid);
+  color: var(--ink);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4.5px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.burger-btn span {
+  width: 16px;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform 0.22s ease, opacity 0.2s ease;
+}
+
+.burger-btn.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.burger-btn.is-open span:nth-child(2) { opacity: 0; }
+.burger-btn.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.drawer-backdrop { display: none; }
+
+.drawer-head {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 2px 12px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.drawer-close {
+  border: 1px solid var(--rule-strong);
+  background: var(--bg-sheet-solid);
+  color: var(--ink-muted);
+  border-radius: var(--radius-sm);
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── ≤ 900px: tablet / phone ─────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .burger-btn { display: inline-flex; }
+
+  .topbar {
+    padding: 12px max(14px, 2%);
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+
+  .brand-tag { display: none; }
+
+  /* Landing section nav becomes a left drawer. */
+  .site-nav,
+  .app-rail {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60;
+    width: min(88vw, 320px);
+    height: 100dvh;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    background: var(--bg-sheet-solid);
+    border: 0;
+    border-right: 1px solid var(--rule);
+    border-radius: 0;
+    box-shadow: none;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+    overflow-y: auto;
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .site-nav.is-open,
+  .app-rail.is-open {
+    transform: none;
+    box-shadow: 20px 0 60px rgba(17, 19, 23, 0.22);
+  }
+
+  .site-nav .drawer-head,
+  .app-rail .drawer-head { display: flex; }
+
+  .site-nav-link,
+  .rail-item {
+    min-height: 44px;
+    font-size: 15px;
+    padding: 11px 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .site-nav-link::after { display: none; }
+
+  /* The rail's collapse control is meaningless inside a drawer. */
+  .rail-toggle,
+  .rail-head .rail-title { display: none; }
+
+  .app-rail.is-collapsed .rail-label,
+  .app-rail.is-collapsed .rail-count { display: inline; }
+
+  .app-rail.is-collapsed .rail-item { justify-content: flex-start; padding: 11px 12px; }
+
+  .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(17, 19, 23, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    border: 0;
+    padding: 0;
+  }
+
+  .drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+
+  /* Single column everywhere. */
+  .app-shell,
+  .desk-layout,
+  .grid-2,
+  .grid-3,
+  .step-grid,
+  .hero-stage-inner { grid-template-columns: 1fr; }
+
+  .app-shell { gap: 0; }
+
+  .shell { padding: 0 max(14px, 2%) 60px; }
+
+  .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+
+  /* Wide tables scroll inside their panel instead of widening it. */
+  .receipt-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .receipt-table thead,
+  .receipt-table tbody {
+    display: table;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .json-drawer { overflow-x: auto; }
+
+  /* Touch targets and iOS zoom prevention. */
+  .btn,
+  .rail-item,
+  .drawer-close { min-height: 36px; }
+
+  .btn-primary,
+  .btn-hero,
+  .btn-hero-ghost { min-height: 44px; }
+
+  input,
+  select,
+  textarea,
+  .input,
+  .select,
+  .textarea { font-size: 16px; }
+
+  input[type="range"] { height: 28px; }
+
+  .hero-h1 { font-size: clamp(32px, 8vw, 46px); }
+
+  .decision-log { position: static; width: 100%; margin-top: 16px; }
+
+  .perimeter-wrap { max-width: 420px; margin-inline: auto; }
+}
+
+/* ── ≤ 600px: phone density ──────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .kpi-row { grid-template-columns: 1fr; }
+
+  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+
+  .hero-stat { padding: 16px 14px 18px; }
+
+  .hero-cta { gap: 10px; }
+
+  .hero-cta > * { flex: 1 1 100%; justify-content: center; }
+
+  .toggle-row { flex-wrap: wrap; }
+
+  .section-block { padding: 36px 0; }
+
+  .perimeter-wrap { max-width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav,
+  .app-rail,
+  .drawer-backdrop,
+  .burger-btn span { transition: none !important; }
+}
+
+@media (max-width: 900px) {
+  /* The decision log's cells are nowrap by design (addresses, chain ids),
+     so the panel scrolls rather than stretching the hero column. */
+  .decision-log { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .decision-log table { min-width: 340px; }
+
+  /* Drawer CTA sits at the bottom of the panel, as the pattern expects. */
+  .drawer-cta { margin-top: auto; justify-content: center; }
+}
+
+@media (max-width: 900px) {
+  /* The top bar is brand + burger only. Status pills are secondary chrome:
+     they wrap the bar into three rows on a phone, so they move into the
+     drawer (see .rail-status) rather than shrinking into illegibility. */
+  .topbar {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-links {
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-left: auto;
+    align-items: center;
+  }
+
+  .nav-links .pill,
+  .nav-links a.pill,
+  .nav-links span.pill { display: none; }
+
+  .burger-btn { order: 99; }
+
+  .brand-lockup { min-width: 0; flex-shrink: 1; }
+
+  .brand-name { font-size: 22px; }
+}
+
+/* Live status, surfaced inside the desk drawer on phones. */
+.rail-status { display: none; }
+
+@media (max-width: 900px) {
+  .rail-status {
+    display: block;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .rail-status-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 5px 2px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-muted);
+  }
+
+  .rail-status-row span:first-child {
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 9.5px;
+  }
+
+  .rail-status-row strong { overflow-wrap: anywhere; text-align: right; }
 }
