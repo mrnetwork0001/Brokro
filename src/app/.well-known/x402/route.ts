@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { getActiveKiteNetwork, PIEVERSE_FACILITATOR_URL, usdToAtomicUnits } from "@/lib/kite/networks";
 import { getMerchantPayTo } from "@/lib/kite/wallets";
 import { WHOLESALE_BUNDLE_PRICE_USD, buildVendorCatalog } from "@/lib/partners/catalog";
+import { resolvePublicOrigin } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const origin = new URL(req.url).origin;
+  const origin = resolvePublicOrigin(req);
   const net = getActiveKiteNetwork();
   const payTo = getMerchantPayTo();
   const suppliers = buildVendorCatalog(origin, false, net.id);

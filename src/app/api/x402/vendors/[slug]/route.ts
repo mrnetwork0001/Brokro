@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getActiveKiteNetwork } from "@/lib/kite/networks";
 import { withX402Gate } from "@/lib/kite/x402-server";
 import { buildVendorCatalog, executeLiveVendorDataProbe } from "@/lib/partners/catalog";
+import { resolvePublicOrigin } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export async function GET(
 ) {
   const { slug } = await context.params;
   const reqUrl = new URL(req.url);
-  const origin = reqUrl.origin;
+  const origin = resolvePublicOrigin(req);
   const net = getActiveKiteNetwork();
 
   const allVendors = buildVendorCatalog(origin, true, net.id);

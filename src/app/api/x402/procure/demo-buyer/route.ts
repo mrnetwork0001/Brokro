@@ -6,6 +6,7 @@ import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { explorerTxUrl, getActiveKiteNetwork, usdToAtomicUnits } from "@/lib/kite/networks";
 import { createKiteX402Signer, getBuyerAccount } from "@/lib/kite/wallets";
 import { acquireCallerLock } from "@/lib/ledger";
+import { resolvePublicOrigin } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
       entity?: string;
       identifier?: string;
     };
-    const origin = new URL(req.url).origin;
+    const origin = resolvePublicOrigin(req);
     const net = getActiveKiteNetwork();
 
     const target = new URL(`${origin}/api/x402/procure`);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runAttackArenaBenchmark } from "@/lib/arena";
 import { PRESET_MANDATES } from "@/lib/partners/catalog";
 import type { ProcurementMandate } from "@/lib/types";
+import { resolvePublicOrigin } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +32,8 @@ export async function POST(req: Request) {
     };
 
     const result = await runAttackArenaBenchmark({
-      origin: reqUrl.origin,
-      originHost: reqUrl.host.toLowerCase(),
+      origin: resolvePublicOrigin(req),
+      originHost: new URL(resolvePublicOrigin(req)).host.toLowerCase(),
       mandate,
       maxAmountPerTxUsd: body.maxAmountPerTxUsd,
       maxTotalAmountUsd: body.maxTotalAmountUsd,

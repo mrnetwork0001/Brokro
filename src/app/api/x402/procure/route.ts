@@ -7,13 +7,15 @@ import { withX402Gate } from "@/lib/kite/x402-server";
 import { checkDailyOutflowAllowed, recordCompletedRun } from "@/lib/ledger";
 import { PRESET_MANDATES, WHOLESALE_BUNDLE_PRICE_USD } from "@/lib/partners/catalog";
 import type { ProcurementMandate } from "@/lib/types";
+import { resolvePublicOrigin } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
 async function handleWholesaleProcure(req: Request): Promise<Response> {
   const reqUrl = new URL(req.url);
-  const origin = reqUrl.origin;
-  const originHost = reqUrl.host.toLowerCase();
+  const origin = resolvePublicOrigin(req);
+  const originHost = new URL(origin).host.toLowerCase();
+  const requestHost = reqUrl.host.toLowerCase();
   const net = getActiveKiteNetwork();
 
   return withX402Gate(
@@ -80,7 +82,7 @@ async function handleWholesaleProcure(req: Request): Promise<Response> {
         maxAmountPerTxUsd: 0.012,
         maxTotalAmountUsd: 0.03,
         ttlMinutes: 10,
-        allowedHosts: [originHost, "localhost:3000", "127.0.0.1:3000"],
+        allowedHosts: [originHost, requestHost, "localhost:3000", "127.0.0.1:3000"],
       });
 
       const run = await executeProcurementGraph({

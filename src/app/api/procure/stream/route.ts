@@ -5,13 +5,15 @@ import { getBuyerAccount } from "@/lib/kite/wallets";
 import { checkDailyOutflowAllowed, recordCompletedRun } from "@/lib/ledger";
 import { PRESET_MANDATES } from "@/lib/partners/catalog";
 import type { ProcurementMandate, SessionMode } from "@/lib/types";
+import { resolvePublicOrigin } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const originUrl = new URL(req.url);
-  const origin = originUrl.origin;
-  const originHost = originUrl.host.toLowerCase();
+  const origin = resolvePublicOrigin(req);
+  const originHost = new URL(origin).host.toLowerCase();
+  const requestHost = originUrl.host.toLowerCase();
 
   let body: {
     mandate?: Partial<ProcurementMandate>;
@@ -79,7 +81,7 @@ export async function POST(req: Request) {
       maxAmountPerTxUsd: maxPerTx,
       maxTotalAmountUsd: maxTotal,
       ttlMinutes: Number(body.ttlMinutes ?? 30),
-      allowedHosts: [originHost, "localhost:3000", "127.0.0.1:3000"],
+      allowedHosts: [originHost, requestHost, "localhost:3000", "127.0.0.1:3000"],
       passkeyVerified: true,
     });
 
