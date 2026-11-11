@@ -305,7 +305,29 @@ export default async function ReceiptPage({
                 <td className="mono tabular">
                   {r.settlementNetwork ?? r.caip2Network}
                 </td>
-                <td className="mono">{r.onChain ? "yes" : "signed, unfunded"}</td>
+                <td className="mono">
+                  {r.onChain ? (
+                    "yes"
+                  ) : (
+                    <>
+                      no
+                      {r.settlementNote && (
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--ink-muted)",
+                            marginTop: "3px",
+                            maxWidth: "280px",
+                            lineHeight: 1.4,
+                            whiteSpace: "normal",
+                          }}
+                        >
+                          {r.settlementNote}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </td>
                 <td className="mono">
                   {r.explorerUrl && r.txHash ? (
                     <a

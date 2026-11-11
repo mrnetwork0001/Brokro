@@ -206,6 +206,9 @@ export async function withX402Gate(
 
   let useFacilitatorSettle = false;
   let verifiedPayer = payer;
+  // Set whenever the authorization is valid but cannot be broadcast, so the
+  // receipt can say why instead of just carrying onChain: false.
+  let fallbackReason: string | undefined;
 
   try {
     const verifyRes = await facilitatorClient.verify(paymentPayload, requirements);
@@ -222,6 +225,7 @@ export async function withX402Gate(
         return build402ChallengeResponse(spec, localCheck.reason || "invalid_payment_signature");
       }
       verifiedPayer = localCheck.payer || payer;
+      fallbackReason = `EIP-3009 authorization cryptographically verified, but not broadcast: the facilitator reported "${(verifyRes.invalidReason || "insufficient funds").slice(0, 80)}" for ${net.asset.symbol} on ${net.caip2}.`;
     } else {
       // Also check if facilitator rejected solely due to unfunded testnet account
       const localCheck = isSignedSandboxFallbackAllowed()
@@ -235,6 +239,7 @@ export async function withX402Gate(
         );
       }
       verifiedPayer = localCheck.payer || payer;
+      fallbackReason = `EIP-3009 authorization cryptographically verified, but not broadcast: facilitator declined with "${(verifyRes.invalidReason || "verification_failed").slice(0, 80)}".`;
     }
   } catch {
     const localCheck = isSignedSandboxFallbackAllowed()
@@ -245,6 +250,8 @@ export async function withX402Gate(
       return build402ChallengeResponse(spec, "facilitator_unreachable");
     }
     verifiedPayer = localCheck.payer || payer;
+    fallbackReason =
+      "EIP-3009 authorization cryptographically verified, but not broadcast: the Pieverse facilitator was unreachable.";
   }
 
   // Execute upstream BEFORE settling (Kite golden rule: never charge on >= 400).
@@ -305,6 +312,9 @@ export async function withX402Gate(
   const headers = new Headers(upstreamResponse.headers);
   headers.set("PAYMENT-RESPONSE", encodePaymentResponseHeader(settleHeader));
   headers.set("X-Brokro-Onchain-Settled", settledOnChain ? "true" : "false");
+  if (!settledOnChain && fallbackReason) {
+    headers.set("X-Brokro-Settlement-Note", fallbackReason);
+  }
   headers.set("X-Brokro-Escrow-Guarantee", "pay-only-if-verified");
   headers.set("Cache-Control", "private, no-store");
 

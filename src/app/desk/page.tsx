@@ -1436,7 +1436,43 @@ export default function ClearinghouseDeskPage() {
                           </td>
                           <td>
                             {r.outcome === "settled" ? (
-                              <span className="badge ok">SETTLED (${r.settledUsd.toFixed(4)})</span>
+                              <div>
+                                {r.onChain ? (
+                                  <span className="badge ok">
+                                    SETTLED ON-CHAIN (${r.settledUsd.toFixed(4)})
+                                  </span>
+                                ) : (
+                                  <span className="badge warn">
+                                    SIGNED, NOT BROADCAST (${r.settledUsd.toFixed(4)})
+                                  </span>
+                                )}
+                                {!r.onChain && r.settlementNote && (
+                                  <div
+                                    style={{
+                                      fontSize: "11px",
+                                      color: "var(--ink-muted)",
+                                      marginTop: "4px",
+                                      maxWidth: "340px",
+                                      lineHeight: 1.45,
+                                    }}
+                                  >
+                                    {r.settlementNote}
+                                  </div>
+                                )}
+                                {r.onChain && r.explorerUrl && (
+                                  <div style={{ marginTop: "4px" }}>
+                                    <a
+                                      className="mono"
+                                      href={r.explorerUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{ fontSize: "11px", color: "var(--copper)" }}
+                                    >
+                                      {r.txHash?.slice(0, 14)}… ↗
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
                             ) : r.outcome === "blocked_policy" ? (
                               <div>
                                 <span className="badge bad">

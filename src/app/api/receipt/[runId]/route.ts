@@ -59,6 +59,7 @@ export async function GET(
       settlementNetwork: r.settlementNetwork ?? r.caip2Network,
       onChain: r.onChain,
       txHash: r.txHash ?? null,
+      settlementNote: r.settlementNote ?? null,
       explorerUrl: r.explorerUrl ?? null,
       policyErrorCode: r.policyErrorCode ?? null,
       policyHint: r.policyHint ?? null,

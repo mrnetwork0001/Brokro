@@ -314,6 +314,10 @@ export async function procureFromX402Vendor(params: {
         ? decodedSettle.transaction
         : undefined;
     const isOnChain = Boolean(txHash && onChainHeader);
+    const settlementNote = isOnChain
+      ? undefined
+      : paidRes.headers.get("x-brokro-settlement-note") ||
+        "Authorization accepted but no transaction hash was returned.";
     const body = (await paidRes.json()) as Record<string, unknown>;
 
     return {
@@ -335,6 +339,7 @@ export async function procureFromX402Vendor(params: {
       payer: decodedSettle?.payer || getBuyerAccount().address,
       payTo: option.payTo,
       nonce: authNonce,
+      settlementNote,
       latencyMs: Date.now() - started,
       timestamp: new Date().toISOString(),
       payload: body,

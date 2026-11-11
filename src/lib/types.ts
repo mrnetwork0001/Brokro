@@ -140,6 +140,13 @@ export interface SettlementReceipt {
   policyErrorCode?: KitePolicyErrorCode;
   policyHint?: string;
   reroutedToVendorId?: string;
+  /**
+   * Why a settlement did not reach the chain, when it did not. An unfunded
+   * wallet still produces a cryptographically valid EIP-3009 authorization,
+   * and `onChain: false` alone does not say that out loud — so the reason
+   * travels with the receipt rather than being inferred from a missing hash.
+   */
+  settlementNote?: string;
   latencyMs: number;
   timestamp: string;
   payload?: Record<string, unknown>;
