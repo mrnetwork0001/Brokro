@@ -192,6 +192,16 @@ export default async function ReceiptPage({
               <td>Expires</td>
               <td className="mono">{ts(run.session.expiresAt)}</td>
             </tr>
+            <tr>
+              <td>Owner authorization</td>
+              <td className="mono">
+                {run.session.ownerAuthorization === "kite-passport-passkey"
+                  ? "Kite Passport passkey approval"
+                  : run.session.ownerAuthorization === "eip191-wallet-signature"
+                    ? "EIP-191 wallet signature (verified)"
+                    : "none \u2014 keyless demo session"}
+              </td>
+            </tr>
             {run.session.walletSignature && (
               <tr>
                 <td>Owner wallet signature</td>

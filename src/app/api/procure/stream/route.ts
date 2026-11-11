@@ -98,7 +98,8 @@ export async function POST(req: Request) {
         ...(includeExternalMerchants ? EXTERNAL_MERCHANT_HOSTS : []),
       ],
       additionalNetworks: includeExternalMerchants ? EXTERNAL_MERCHANT_NETWORKS : [],
-      passkeyVerified: true,
+      // No passkey and no signature: this is the keyless demo path, and the
+      // receipt should say so. Sign a mandate from the desk to upgrade it.
     });
 
   const encoder = new TextEncoder();

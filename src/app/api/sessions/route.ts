@@ -79,7 +79,9 @@ export async function POST(req: Request) {
       maxTotalAmountUsd,
       ttlMinutes,
       allowedHosts: [originHost, "localhost:3000", "127.0.0.1:3000"],
-      passkeyVerified: true,
+      // Wallet mode proves owner intent with a verified EIP-191 signature,
+      // which createSessionPolicy records as "eip191-wallet-signature". It is
+      // not a Kite Passport passkey, so it must not claim to be one.
       walletSignature: body.walletSignature,
     });
 

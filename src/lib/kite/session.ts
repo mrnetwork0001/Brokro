@@ -63,6 +63,11 @@ export function createSessionPolicy(params: {
   maxTotalAmountUsd: number;
   ttlMinutes?: number;
   allowedHosts: string[];
+  /**
+   * Set only when the mandate really went through Kite Passport's passkey
+   * approval. Defaults to false: asserting an approval that never happened is
+   * the one claim a spending-limit product cannot afford to get wrong.
+   */
   passkeyVerified?: boolean;
   walletSignature?: string;
   /**
@@ -126,7 +131,12 @@ export function createSessionPolicy(params: {
     createdAt: new Date(now).toISOString(),
     expiresAt: new Date(now + ttlMs).toISOString(),
     allowedHosts: params.allowedHosts.map((h) => h.toLowerCase()),
-    passkeyVerified: params.passkeyVerified ?? true,
+    passkeyVerified: params.passkeyVerified ?? false,
+    ownerAuthorization: params.passkeyVerified
+      ? "kite-passport-passkey"
+      : params.walletSignature
+        ? "eip191-wallet-signature"
+        : "none",
     walletSignature: params.walletSignature,
   };
 

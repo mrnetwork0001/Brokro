@@ -51,6 +51,17 @@ export interface SessionPolicy {
   createdAt: string;
   expiresAt: string;
   allowedHosts: string[];
+  /**
+   * How the owner actually authorized this mandate. "none" is a demo session
+   * nobody signed for; it is the honest default, because a field that always
+   * reads "verified" tells a reader nothing.
+   */
+  ownerAuthorization: "none" | "eip191-wallet-signature" | "kite-passport-passkey";
+  /**
+   * True only for a mandate approved through Kite Passport's passkey flow.
+   * An EIP-191 wallet signature is owner authorization but is NOT a passkey,
+   * so it does not set this.
+   */
   passkeyVerified: boolean;
   walletSignature?: string;
 }

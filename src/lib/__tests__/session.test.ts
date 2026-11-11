@@ -156,4 +156,38 @@ describe("Kite Passport Session Policy Engine", () => {
     const replay = guard.reserve("0xabcdef0000000000000000000000000000000001", "0xDEADBEEF01");
     assert.equal(replay, null);
   });
+  it("never claims an owner authorization that did not happen", () => {
+    const common = {
+      taskSummary: "Authorization honesty",
+      ownerAddress: "0x1111111111111111111111111111111111111111",
+      agentAddress: "0x2222222222222222222222222222222222222222",
+      network: "testnet" as const,
+      maxAmountPerTxUsd: 0.015,
+      maxTotalAmountUsd: 0.035,
+      ttlMinutes: 30,
+      allowedHosts: ["localhost:3000"],
+    };
+
+    // The keyless demo path: nobody signed anything, and the session must say so.
+    const demo = createSessionPolicy({ ...common });
+    assert.equal(demo.ownerAuthorization, "none");
+    assert.equal(demo.passkeyVerified, false);
+
+    // A verified EIP-191 wallet signature is owner intent, but is NOT a passkey.
+    const signed = createSessionPolicy({
+      ...common,
+      walletSignature: "0xdeadbeef",
+    });
+    assert.equal(signed.ownerAuthorization, "eip191-wallet-signature");
+    assert.equal(
+      signed.passkeyVerified,
+      false,
+      "an EIP-191 signature must not be reported as a Kite Passport passkey",
+    );
+
+    // Only a real Passport approval sets the passkey flag.
+    const passkey = createSessionPolicy({ ...common, passkeyVerified: true });
+    assert.equal(passkey.ownerAuthorization, "kite-passport-passkey");
+    assert.equal(passkey.passkeyVerified, true);
+  });
 });

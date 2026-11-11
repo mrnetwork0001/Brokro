@@ -35,6 +35,8 @@ export async function GET(
       allowedAssets: run.session.allowedAssets ?? [],
       allowedHosts: run.session.allowedHosts,
       expiresAt: run.session.expiresAt,
+      ownerAuthorization: run.session.ownerAuthorization ?? "none",
+      passkeyVerified: run.session.passkeyVerified === true,
       walletSignature: run.session.walletSignature ?? null,
     },
     quarantined: run.guards
