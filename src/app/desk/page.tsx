@@ -111,6 +111,8 @@ export default function ClearinghouseDeskPage() {
   // Adversarial & Reppo switches
   const [includeAdversarial, setIncludeAdversarial] = useState<boolean>(false);
   const [submitToReppo, setSubmitToReppo] = useState<boolean>(false);
+  const [includeExternalMerchants, setIncludeExternalMerchants] =
+    useState<boolean>(false);
 
   // Live streaming run state
   const [running, setRunning] = useState<boolean>(false);
@@ -295,6 +297,7 @@ export default function ClearinghouseDeskPage() {
           ttlMinutes,
           includeAdversarial,
           submitToReppo,
+          includeExternalMerchants,
         }),
       });
 
@@ -885,6 +888,27 @@ export default function ClearinghouseDeskPage() {
                   type="checkbox"
                   checked={submitToReppo}
                   onChange={(e) => setSubmitToReppo(e.target.checked)}
+                  style={{ width: "18px", height: "18px", marginTop: "3px" }}
+                />
+              </label>
+
+              <label className="toggle-row">
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "13.5px" }}>
+                    Shop Independent Third-Party Merchants
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--ink-muted)", marginTop: "2px" }}>
+                    Widens the mandate to real x402 businesses on Base{" "}
+                    <span className="mono">eip155:8453</span> (Otto AI, PrintMoneyLab,
+                    IP402) that have never heard of Brokro. Leave this off and every
+                    one of them is refused <span className="mono">session_asset_forbidden</span>{" "}
+                    before a signature exists.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={includeExternalMerchants}
+                  onChange={(e) => setIncludeExternalMerchants(e.target.checked)}
                   style={{ width: "18px", height: "18px", marginTop: "3px" }}
                 />
               </label>

@@ -16,6 +16,10 @@ import { procureFromX402Vendor } from "../kite/x402-buyer";
 import { WHOLESALE_BUNDLE_PRICE_USD, buildVendorCatalog } from "../partners/catalog";
 import { submitDossierToReppo } from "../partners/reppo";
 import {
+  EXTERNAL_MERCHANTS,
+  procureFromExternalMerchant,
+} from "../partners/external-merchants";
+import {
   ARBITER_MODEL,
   PLANNER_MODEL,
   runResponsesStep,
@@ -578,6 +582,12 @@ export async function executeProcurementGraph(params: {
   session: SessionPolicy;
   includeAdversarial: boolean;
   submitToReppo: boolean;
+  /**
+   * Also shop the independent third-party x402 merchants (Otto AI,
+   * PrintMoneyLab, IP402). Off by default: these are real businesses on Base
+   * mainnet, so a caller has to opt in to being quoted by them.
+   */
+  includeExternalMerchants?: boolean;
   callerType?: "interactive-desk" | "x402-wholesale-buyer";
   wholesalePaymentTxHash?: string;
   callbacks?: GraphCallbacks;
@@ -841,8 +851,30 @@ export async function executeProcurementGraph(params: {
       run.receipts.push(receipt);
     }
 
+    // Third-party leg: the merchants above are Brokro's own endpoints, so
+    // paying them proves the policy engine but not that it survives contact
+    // with a business that has never heard of us. These have their own prices,
+    // their own chains and their own 402 headers.
+    if (params.includeExternalMerchants) {
+      for (const merchant of EXTERNAL_MERCHANTS) {
+        if (params.callbacks?.signal?.aborted) break;
+        const extReceipt = await procureFromExternalMerchant({
+          merchant,
+          session: params.session,
+          mandate: {
+            entity: params.mandate.targetEntity,
+            identifier: params.mandate.targetIdentifier,
+          },
+          signal: params.callbacks?.signal,
+        });
+        run.receipts.push(extReceipt);
+      }
+    }
+
     const settledReceipts = run.receipts.filter((r) => r.outcome === "settled");
     const blockedReceipts = run.receipts.filter((r) => r.outcome === "blocked_policy");
+    const externalReceipts = run.receipts.filter((r) => r.externalMerchant === true);
+    const externalSettled = externalReceipts.filter((r) => r.outcome === "settled");
 
     if (settledReceipts.length === 0) {
       throw new Error(
@@ -859,10 +891,29 @@ export async function executeProcurementGraph(params: {
       completedAt: new Date().toISOString(),
       durationMs: Date.now() - s3Start,
       costUsd: params.session.spentUsd,
-      summary:
+      summary: [
         blockedReceipts.length > 0
-          ? `Settled ${settledReceipts.length} x402 call(s) ($${params.session.spentUsd.toFixed(4)} ${params.session.assetSymbol}); blocked ${blockedReceipts.length} bait-and-switch 402 spike (${blockedReceipts.map((b) => b.policyErrorCode).join(", ")}) and rerouted cleanly.`
+          ? `Settled ${settledReceipts.length} x402 call(s) ($${params.session.spentUsd.toFixed(4)} ${params.session.assetSymbol}); blocked ${blockedReceipts.length} bait-and-switch 402 spike (${blockedReceipts
+              .map((b) => b.policyErrorCode)
+              .filter(Boolean)
+              .join(", ")}) and rerouted cleanly.`
           : `Settled ${settledReceipts.length} x402 call(s) totaling $${params.session.spentUsd.toFixed(4)} ${params.session.assetSymbol}.`,
+        externalReceipts.length > 0
+          ? `Third-party leg: quoted ${externalReceipts.length} independent merchant(s), settled ${externalSettled.length}${
+              externalSettled.length < externalReceipts.length
+                ? ` \u2014 ${externalReceipts.length - externalSettled.length} refused by mandate (${Array.from(
+                    new Set(
+                      externalReceipts
+                        .filter((r) => r.outcome !== "settled")
+                        .map((r) => r.policyErrorCode ?? "preflight_no_signature"),
+                    ),
+                  ).join(", ")})`
+                : ""
+            }.`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
       detail: run.receipts,
     });
 

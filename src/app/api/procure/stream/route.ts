@@ -6,6 +6,10 @@ import { checkDailyOutflowAllowed, recordCompletedRun } from "@/lib/ledger";
 import { PRESET_MANDATES } from "@/lib/partners/catalog";
 import type { ProcurementMandate, SessionMode } from "@/lib/types";
 import { resolvePublicOrigin } from "@/lib/public-url";
+import {
+  EXTERNAL_MERCHANT_HOSTS,
+  EXTERNAL_MERCHANT_NETWORKS,
+} from "@/lib/partners/external-merchants";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +29,7 @@ export async function POST(req: Request) {
     ttlMinutes?: number;
     includeAdversarial?: boolean;
     submitToReppo?: boolean;
+    includeExternalMerchants?: boolean;
   };
 
   try {
@@ -69,6 +74,8 @@ export async function POST(req: Request) {
   const net = getActiveKiteNetwork();
   const buyer = getBuyerAccount();
 
+  const includeExternalMerchants = Boolean(body.includeExternalMerchants);
+
   const existingSession = body.sessionId ? getSessionPolicy(body.sessionId) : undefined;
   const session =
     existingSession ??
@@ -81,7 +88,16 @@ export async function POST(req: Request) {
       maxAmountPerTxUsd: maxPerTx,
       maxTotalAmountUsd: maxTotal,
       ttlMinutes: Number(body.ttlMinutes ?? 30),
-      allowedHosts: [originHost, requestHost, "localhost:3000", "127.0.0.1:3000"],
+      allowedHosts: [
+        originHost,
+        requestHost,
+        "localhost:3000",
+        "127.0.0.1:3000",
+        // Scoped in only on opt-in: an unauthorized host is refused before a
+        // signature exists, which is the behaviour the demo relies on.
+        ...(includeExternalMerchants ? EXTERNAL_MERCHANT_HOSTS : []),
+      ],
+      additionalNetworks: includeExternalMerchants ? EXTERNAL_MERCHANT_NETWORKS : [],
       passkeyVerified: true,
     });
 
@@ -106,6 +122,7 @@ export async function POST(req: Request) {
         session,
         includeAdversarial: Boolean(body.includeAdversarial),
         submitToReppo: Boolean(body.submitToReppo),
+        includeExternalMerchants,
         callerType: "interactive-desk",
         callbacks: {
           signal: req.signal,

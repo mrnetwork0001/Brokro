@@ -317,6 +317,21 @@ export async function getLiveExternalPrices(session: SessionPolicy): Promise<Ext
   return probes;
 }
 
+/**
+ * Hostnames of every independent merchant in the registry.
+ *
+ * A mandate scopes which hosts it may pay, so authorizing third-party commerce
+ * means naming these explicitly — derived from the registry rather than
+ * hand-listed so a new merchant cannot be silently unpayable (or, worse,
+ * silently payable after the host list drifts).
+ */
+export const EXTERNAL_MERCHANT_HOSTS: string[] = Array.from(
+  new Set(EXTERNAL_MERCHANTS.map((m) => new URL(m.endpoint).host.toLowerCase())),
+);
+
+/** CAIP-2 networks these merchants price in, for `additionalNetworks`. */
+export const EXTERNAL_MERCHANT_NETWORKS: string[] = ["eip155:8453"];
+
 export function getMerchantById(id: string): ExternalMerchant | undefined {
   return EXTERNAL_MERCHANTS.find((m) => m.id === id);
 }
