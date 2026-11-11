@@ -880,8 +880,11 @@ export default function ClearinghouseDeskPage() {
                     Anchor Async Verdict on Reppo
                   </div>
                   <div style={{ fontSize: "12px", color: "var(--ink-muted)", marginTop: "2px" }}>
-                    Submits verified dossier to <span className="mono">eval.reppo.xyz</span>{" "}
-                    (10m peer window; non-blocking).
+                    Submits the verified dossier to{" "}
+                    <span className="mono">eval.reppo.xyz</span> for scoring by an
+                    independent evaluator panel. Non-blocking, and it runs{" "}
+                    <em>after</em> settlement — there is no point paying a panel to
+                    assess a report whose citations we can already prove wrong.
                   </div>
                 </div>
                 <input
@@ -1643,7 +1646,28 @@ export default function ClearinghouseDeskPage() {
                         }}
                       >
                         <span className="mono">
-                          Reppo: <strong>{completedRun.reppoAudit.status}</strong> (
+                          Reppo: <strong>{completedRun.reppoAudit.status}</strong>
+                          {typeof completedRun.reppoAudit.score === "number" && (
+                            <>
+                              {" "}
+                              &middot; score{" "}
+                              <strong>{completedRun.reppoAudit.score}/100</strong>
+                            </>
+                          )}
+                          {completedRun.reppoAudit.route && (
+                            <>
+                              {" "}
+                              &middot; route{" "}
+                              <strong>{completedRun.reppoAudit.route}</strong>
+                            </>
+                          )}
+                          {completedRun.reppoAudit.confidence && (
+                            <>
+                              {" "}
+                              &middot; {completedRun.reppoAudit.confidence} confidence
+                            </>
+                          )}
+                          {" ("}
                           {shortHex(completedRun.reppoAudit.evalId, 8, 6)})
                         </span>
                         {completedRun.reppoAudit.evalId !== "unconfigured" &&

@@ -200,14 +200,30 @@ export interface WholesaleMargin {
 
 export interface ReppoAuditRecord {
   evalId: string;
-  status: "PENDING" | "SETTLED" | "UNCONFIGURED" | "ERROR";
-  settlementMinutes: number;
+  /**
+   * Reppo's own lifecycle. There is no settlement window any more: an
+   * evaluation is QUEUED, then PROCESSING, then COMPLETED or FAILED.
+   * UNCONFIGURED and ERROR are Brokro's own states for "no key" and
+   * "the call did not get through".
+   */
+  status:
+    | "QUEUED"
+    | "PROCESSING"
+    | "COMPLETED"
+    | "FAILED"
+    | "UNCONFIGURED"
+    | "ERROR";
   submittedAt: string;
+  /** 0-100 overall quality, once COMPLETED. */
   score?: number;
-  decision?: "accept" | "revise" | "reject";
+  decision?: "accept" | "reject";
   confidence?: "high" | "medium" | "low";
-  route?: "auto-ship" | "review" | "block";
+  route?: "ship" | "review" | "block";
   critique?: string;
+  /** Per-dimension breakdown, e.g. { accuracy: 100, evidence: 100 }. */
+  rubricScores?: Record<string, number>;
+  /** Stays 0 until COMPLETED; a FAILED evaluation is never charged. */
+  creditsCharged?: number;
   consoleUrl: string;
   note?: string;
 }

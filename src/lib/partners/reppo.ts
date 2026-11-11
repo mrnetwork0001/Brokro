@@ -1,22 +1,115 @@
 /**
- * Reppo Evaluation API Adapter (`https://eval.reppo.xyz/api/v1`).
+ * Reppo Eval Router adapter (`https://eval.reppo.xyz/api/v1`).
  *
- * Because Reppo peer-judged evaluations settle asynchronously after a minimum
- * 10-minute window (`settlementMinutes: 10`), Brokr never blocks checkout on
- * Reppo: synchronous verification happens in <20s via `serv_shadow_agent` +
- * deterministic citation checking, while Reppo anchors an independent,
- * EU-AI-Act-grade network verdict asynchronously.
+ * Brokro's own verification is deterministic and synchronous: plain TypeScript
+ * matches every cited value against the raw merchant JSON before settlement is
+ * released. Reppo answers a different question — not "did the agent quote this
+ * field correctly" but "is the judgment it built on top of those fields any
+ * good" — scored by a panel of independent evaluators rather than by us.
+ *
+ * So Reppo never gates checkout. It anchors an outside opinion on a dossier
+ * that has already been proved internally consistent, which is the only
+ * ordering that makes sense: there is no point paying a panel to assess a
+ * report whose citations we can show are wrong.
+ *
+ * Evaluations are queued and scored in the background, typically in 30–90s, so
+ * every call here returns immediately and the verdict is polled separately.
  */
 
 import type { ProcurementMandate, ReppoAuditRecord, SynthesizedDossier } from "../types";
 
-const REPPO_BASE_URL =
-  process.env.REPPO_EVAL_BASE_URL || "https://eval.reppo.xyz/api/v1";
+const REPPO_BASE_URL = process.env.REPPO_EVAL_BASE_URL || "https://eval.reppo.xyz/api/v1";
+const CONSOLE_URL = "https://eval.reppo.xyz";
+
+/** A text-only evaluation. The 22,000-credit signup bonus covers 50 of them. */
+export const REPPO_TEXT_EVAL_CREDITS = 440;
 
 export function isReppoConfigured(): boolean {
   return Boolean(process.env.REPPO_API_KEY && process.env.REPPO_API_KEY.trim().length > 0);
 }
 
+function base(): string {
+  return REPPO_BASE_URL.replace(/\/+$/, "");
+}
+
+/** Shape returned by both the submit and read endpoints. */
+interface ReppoEvalResponse {
+  id?: string;
+  status?: string;
+  score?: number | null;
+  route?: string | null;
+  creditsCharged?: number;
+  createdAt?: string;
+  error?: string | null;
+  result?: {
+    score?: number;
+    decision?: string;
+    confidence?: string;
+    route?: string;
+    reason?: string;
+    rubric_scores?: Record<string, number>;
+  } | null;
+}
+
+function normalizeStatus(raw: string | undefined): ReppoAuditRecord["status"] {
+  switch (raw) {
+    case "QUEUED":
+    case "PROCESSING":
+    case "COMPLETED":
+    case "FAILED":
+      return raw;
+    default:
+      return "ERROR";
+  }
+}
+
+function toRecord(d: ReppoEvalResponse, submittedAt: string): ReppoAuditRecord {
+  const r = d.result ?? undefined;
+  const status = normalizeStatus(d.status);
+  return {
+    evalId: d.id ?? "unknown",
+    status,
+    submittedAt: d.createdAt ?? submittedAt,
+    score: r?.score ?? d.score ?? undefined,
+    decision: r?.decision === "accept" || r?.decision === "reject" ? r.decision : undefined,
+    confidence:
+      r?.confidence === "high" || r?.confidence === "medium" || r?.confidence === "low"
+        ? r.confidence
+        : undefined,
+    route:
+      r?.route === "ship" || r?.route === "review" || r?.route === "block"
+        ? r.route
+        : d.route === "ship" || d.route === "review" || d.route === "block"
+          ? d.route
+          : undefined,
+    critique: r?.reason,
+    rubricScores: r?.rubric_scores,
+    creditsCharged: d.creditsCharged,
+    consoleUrl: CONSOLE_URL,
+    note:
+      status === "FAILED"
+        ? `Evaluation failed and was not charged${d.error ? `: ${d.error}` : "."}`
+        : undefined,
+  };
+}
+
+function unconfigured(evalId: string, submittedAt: string): ReppoAuditRecord {
+  return {
+    evalId,
+    status: "UNCONFIGURED",
+    submittedAt,
+    consoleUrl: CONSOLE_URL,
+    note: `Set REPPO_API_KEY in .env.local to anchor an independent panel verdict on ${CONSOLE_URL}. New accounts get 22,000 credits, and a text evaluation costs ${REPPO_TEXT_EVAL_CREDITS}.`,
+  };
+}
+
+/**
+ * Submits a verified dossier for independent scoring.
+ *
+ * Sent as `taskType: "response"` with the mandate as the request and the
+ * dossier as the answer, so the panel can judge whether the conclusion is
+ * actually supported — which is the thing worth an outside opinion.
+ */
 export async function submitDossierToReppo(params: {
   mandate: ProcurementMandate;
   dossier: SynthesizedDossier;
@@ -25,146 +118,108 @@ export async function submitDossierToReppo(params: {
   const apiKey = process.env.REPPO_API_KEY?.trim();
   const now = new Date().toISOString();
 
-  if (!apiKey) {
-    return {
-      evalId: "unconfigured",
-      status: "UNCONFIGURED",
-      settlementMinutes: 10,
-      submittedAt: now,
-      consoleUrl: "https://eval.reppo.xyz",
-      note: "Set REPPO_API_KEY in .env.local to anchor live async peer evaluations on eval.reppo.xyz (10 free evaluations on signup).",
-    };
-  }
+  if (!apiKey) return unconfigured("unconfigured", now);
+
+  const input = [
+    `User request: Screen the counterparty "${params.mandate.targetEntity}" before authorizing $${params.mandate.counterpartyAmountUsd.toLocaleString()} of exposure, and state whether to proceed.`,
+    "",
+    `AI response: ${params.dossier.headline}`,
+    `Decision: ${params.dossier.executiveDecision} (risk ${params.dossier.riskScore}/100)`,
+    "",
+    params.dossier.executiveSummary,
+    "",
+    "Findings, each citing a paid upstream x402 vendor field:",
+    ...params.dossier.findings.map(
+      (f) =>
+        `- [${f.status}] ${f.dimension}: ${f.claim} (source ${f.vendorId}.${f.fieldPath} = "${f.quotedEvidence}")`,
+    ),
+    "",
+    "Recommended conditions:",
+    ...params.dossier.recommendedConditions.map((c) => `- ${c}`),
+    "",
+    `Assess whether the decision and risk score are justified by the cited evidence, and whether the conditions are proportionate. Evidence digest: ${params.receiptDigestSha256}.`,
+  ].join("\n");
 
   try {
-    const res = await fetch(
-      `${REPPO_BASE_URL.replace(/\/+$/, "")}/agents/eval-requests/submit`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: "artifact",
-          payload: JSON.stringify(
-            {
-              headline: params.dossier.headline,
-              executiveDecision: params.dossier.executiveDecision,
-              riskScore: params.dossier.riskScore,
-              executiveSummary: params.dossier.executiveSummary,
-              findings: params.dossier.findings,
-              recommendedConditions: params.dossier.recommendedConditions,
-              receiptDigestSha256: params.receiptDigestSha256,
-            },
-            null,
-            2,
-          ),
-          criteria: [
-            "Does every risk finding cite a concrete upstream vendor ID and quoted telemetry value?",
-            "Is the executive decision logically consistent with the cited evidence and risk score?",
-            "Are recommended treasury/escrow conditions actionable and proportionate?",
-          ],
-          context: `Autonomous B2B counterparty procurement dossier generated by Brokr for "${params.mandate.targetEntity}" ($${params.mandate.counterpartyAmountUsd.toLocaleString()} exposure).`,
-          settlementMinutes: 10,
-        }),
-        signal: AbortSignal.timeout(8_000),
+    const res = await fetch(`${base()}/agents/evals`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({ taskType: "response", input: input.slice(0, 50_000) }),
+      signal: AbortSignal.timeout(12_000),
+    });
 
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
       return {
         evalId: "error",
         status: "ERROR",
-        settlementMinutes: 10,
         submittedAt: now,
-        consoleUrl: "https://eval.reppo.xyz",
-        note: `Reppo Evaluation API returned HTTP ${res.status}: ${errText.slice(0, 180)}`,
+        consoleUrl: CONSOLE_URL,
+        note:
+          res.status === 402
+            ? `Out of Reppo credits: a text evaluation costs ${REPPO_TEXT_EVAL_CREDITS}. Top up at ${CONSOLE_URL}/billing.`
+            : `Reppo Eval Router returned HTTP ${res.status}: ${errText.slice(0, 180)}`,
       };
     }
 
-    const body = (await res.json()) as { evalId?: string; status?: string };
-    const evalId = body.evalId || "pending";
+    const body = (await res.json()) as ReppoEvalResponse;
+    const record = toRecord(body, now);
     return {
-      evalId,
-      status: body.status === "SETTLED" ? "SETTLED" : "PENDING",
-      settlementMinutes: 10,
-      submittedAt: now,
-      consoleUrl: `https://eval.reppo.xyz`,
-      note: "Queued on Reppo peer assessment network (minimum 10m settlement window).",
+      ...record,
+      note:
+        record.note ??
+        "Queued on the Reppo evaluator panel; scored in the background, typically within 30-90s.",
     };
   } catch (err) {
     return {
       evalId: "error",
       status: "ERROR",
-      settlementMinutes: 10,
       submittedAt: now,
-      consoleUrl: "https://eval.reppo.xyz",
+      consoleUrl: CONSOLE_URL,
       note: `Reppo transport error: ${(err as Error).message}`,
     };
   }
 }
 
+/** Reads an evaluation back. Poll until the status leaves QUEUED/PROCESSING. */
 export async function pollReppoVerdict(evalId: string): Promise<ReppoAuditRecord> {
   const apiKey = process.env.REPPO_API_KEY?.trim();
+  const now = new Date().toISOString();
+
   if (!apiKey || !evalId || evalId === "unconfigured" || evalId === "error") {
-    return {
-      evalId,
-      status: "UNCONFIGURED",
-      settlementMinutes: 10,
-      submittedAt: new Date().toISOString(),
-      consoleUrl: "https://eval.reppo.xyz",
-    };
+    return unconfigured(evalId || "unknown", now);
   }
 
-  const res = await fetch(
-    `${REPPO_BASE_URL.replace(/\/+$/, "")}/agents/eval-requests/${encodeURIComponent(evalId)}`,
-    {
+  try {
+    const res = await fetch(`${base()}/agents/evals/${encodeURIComponent(evalId)}`, {
       headers: { Authorization: `Bearer ${apiKey}` },
-      signal: AbortSignal.timeout(6_000),
-    },
-  );
+      signal: AbortSignal.timeout(10_000),
+    });
 
-  if (!res.ok) {
+    if (!res.ok) {
+      return {
+        evalId,
+        status: "ERROR",
+        submittedAt: now,
+        consoleUrl: CONSOLE_URL,
+        note:
+          res.status === 404
+            ? "No evaluation with that id for this account."
+            : `HTTP ${res.status} reading the Reppo evaluation.`,
+      };
+    }
+
+    return toRecord((await res.json()) as ReppoEvalResponse, now);
+  } catch (err) {
     return {
       evalId,
       status: "ERROR",
-      settlementMinutes: 10,
-      submittedAt: new Date().toISOString(),
-      consoleUrl: "https://eval.reppo.xyz",
-      note: `HTTP ${res.status} reading Reppo evaluation`,
+      submittedAt: now,
+      consoleUrl: CONSOLE_URL,
+      note: `Reppo transport error: ${(err as Error).message}`,
     };
   }
-
-  const d = (await res.json()) as {
-    evalId?: string;
-    status?: string;
-    createdAt?: string;
-    verdict?: {
-      score?: number;
-      decision?: "accept" | "revise" | "reject";
-      confidence?: "high" | "medium" | "low";
-      route?: "auto-ship" | "review" | "block";
-      critique?: string;
-    };
-    score?: number;
-    decision?: "accept" | "revise" | "reject";
-    confidence?: "high" | "medium" | "low";
-    route?: "auto-ship" | "review" | "block";
-  };
-
-  const settled = d.status && d.status !== "PENDING";
-  return {
-    evalId: d.evalId || evalId,
-    status: settled ? "SETTLED" : "PENDING",
-    settlementMinutes: 10,
-    submittedAt: d.createdAt || new Date().toISOString(),
-    score: d.verdict?.score ?? d.score,
-    decision: d.verdict?.decision ?? d.decision,
-    confidence: d.verdict?.confidence ?? d.confidence,
-    route: d.verdict?.route ?? d.route,
-    critique: d.verdict?.critique,
-    consoleUrl: "https://eval.reppo.xyz",
-  };
 }

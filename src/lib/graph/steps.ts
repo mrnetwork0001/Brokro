@@ -7,7 +7,7 @@
  *                          with automatic fallback rerouting on `session_rule_exceeded`
  *   4. `cross_examine`   — SERV (`serv_shadow_agent` + `serv_prompt_guard`) cited synthesis
  *   5. `verify_dossier`  — Pure deterministic citation, field-path & spend-cap verifier
- *   6. `anchor_audit`    — Wholesale unit-economics calculation + async Reppo Evaluation API
+ *   6. `anchor_audit`    — Wholesale unit-economics calculation + Reppo Eval Router
  */
 
 import { createHash, randomUUID } from "node:crypto";
