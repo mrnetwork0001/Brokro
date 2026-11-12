@@ -120,7 +120,7 @@ export const EXTERNAL_MERCHANTS: ExternalMerchant[] = [
     category: "registry",
     advertisedPriceUsd: 0.001,
     description:
-      "Normalized IP geolocation and ASN ownership, used to corroborate where a counterparty's infrastructure actually terminates.",
+      "Normalized IP geolocation and ASN ownership, used to corroborate where a counterparty’s infrastructure actually terminates.",
     deliverableFields: ["ip", "country", "asn", "org"],
   },
 ];

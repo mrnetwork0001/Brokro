@@ -255,8 +255,8 @@ export async function readPassportIdentity(): Promise<PassportIdentity> {
     activeKeyCount,
     note:
       activeKeyCount && activeKeyCount > 0
-        ? "Published in Kite's agent directory with an owner-approved signing key."
-        : "Published in Kite's agent directory. No approved signing key yet, so it cannot sign as itself.",
+        ? "Published in Kite’s agent directory with an owner-approved signing key."
+        : "Published in Kite’s agent directory. No approved signing key yet, so it cannot sign as itself.",
   };
 }
 
