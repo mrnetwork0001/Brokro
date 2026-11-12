@@ -54,6 +54,14 @@ export interface ExternalMerchant {
   deliverableFields: string[];
   /** Fills in `{entity}` / `{identifier}` from the active mandate. */
   queryTemplate?: Record<string, string>;
+  /**
+   * The merchant only answers about a deployed contract on its own settlement
+   * chain. Brokro checks that the mandate's target has bytecode there before
+   * it signs anything: a token-security desk asked about an address that is
+   * not a token on its chain takes the payment, then answers HTTP 404, and
+   * the money sits held until the hold expires.
+   */
+  requiresContractTarget?: boolean;
 }
 
 export const EXTERNAL_MERCHANTS: ExternalMerchant[] = [
@@ -71,6 +79,7 @@ export const EXTERNAL_MERCHANTS: ExternalMerchant[] = [
       "Third-party token security screen: honeypot, tax, mint authority and liquidity-lock posture for an EVM token address.",
     deliverableFields: ["status", "data", "meta"],
     queryTemplate: { address: "{identifier}" },
+    requiresContractTarget: true,
   },
   {
     id: "x-otto-token-price",
@@ -86,6 +95,7 @@ export const EXTERNAL_MERCHANTS: ExternalMerchant[] = [
       "Live DEX price, 24h change, volume, market cap, FDV and liquidity for a ticker or contract address across eight chains.",
     deliverableFields: ["status", "data", "meta"],
     queryTemplate: { token: "{identifier}" },
+    requiresContractTarget: true,
   },
   {
     id: "x-printmoneylab-kimchi",
@@ -124,6 +134,44 @@ export const EXTERNAL_MERCHANTS: ExternalMerchant[] = [
     deliverableFields: ["ip", "country", "asn", "org"],
   },
 ];
+
+/**
+ * Does `address` have deployed bytecode on the chain behind `rpcUrl`?
+ *
+ * One `eth_getCode` call, short timeout, and a failure to reach the node is
+ * reported as its own reason rather than as "not a contract": refusing a
+ * purchase because an RPC was down would be a different claim than refusing it
+ * because the target is not there.
+ */
+async function hasBytecodeOn(
+  rpcUrl: string,
+  address: string,
+): Promise<{ ok: boolean; reason: "deployed" | "no-bytecode" | "bad-address" | "rpc-unreachable" }> {
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address.trim())) {
+    return { ok: false, reason: "bad-address" };
+  }
+  try {
+    const res = await fetch(rpcUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "eth_getCode",
+        params: [address.trim(), "latest"],
+      }),
+      signal: AbortSignal.timeout(6_000),
+    });
+    if (!res.ok) return { ok: false, reason: "rpc-unreachable" };
+    const body = (await res.json()) as { result?: string };
+    const code = (body.result ?? "0x").trim();
+    return code !== "0x" && code !== ""
+      ? { ok: true, reason: "deployed" }
+      : { ok: false, reason: "no-bytecode" };
+  } catch {
+    return { ok: false, reason: "rpc-unreachable" };
+  }
+}
 
 function buildMerchantUrl(
   merchant: ExternalMerchant,
@@ -514,6 +562,34 @@ export async function procureFromExternalMerchant(params: {
       payTo: challenge.payTo!,
       startedAt: started,
     });
+  }
+
+  // Refuse before a signature exists when the merchant cannot answer about
+  // this target at all. Otto AI indexes tokens on its own settlement chain, so
+  // a mandate pointed at an EOA, or at a contract that only exists on Kite,
+  // buys an HTTP 404: Kite takes the payment, the merchant delivers nothing,
+  // and the money is held rather than spent or released. Paying for a result
+  // that cannot be delivered is the exact failure this desk exists to prevent.
+  if (merchant.requiresContractTarget) {
+    const deployed = await hasBytecodeOn(net.rpcUrl, params.mandate.identifier);
+    if (!deployed.ok) {
+      reservation.lease.release();
+      return failedReceipt({
+        merchant,
+        net,
+        url,
+        httpStatus: 402,
+        challengedUsd: challenge.challengedUsd,
+        outcome: "blocked_policy",
+        policyErrorCode: "target_not_servable",
+        policyHint:
+          deployed.reason === "no-bytecode"
+            ? `${merchant.name} answers about contracts deployed on ${net.caip2}. The mandate's target ${params.mandate.identifier} has no bytecode there, so the merchant would charge and then return no result.`
+            : `Could not confirm the mandate's target is a contract on ${net.caip2} (${deployed.reason}), so no signature was produced.`,
+        payTo: challenge.payTo!,
+        startedAt: started,
+      });
+    }
   }
 
   // Prefer the keyless rail: if the owner's Passport can pay this under an

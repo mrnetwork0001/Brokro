@@ -14,7 +14,9 @@ export type KitePolicyErrorCode =
   | "session_asset_forbidden"
   | "session_expired"
   | "payment_target_forbidden"
-  | "payment_nonce_replay_detected";
+  | "payment_nonce_replay_detected"
+  /** The merchant cannot answer about this mandate's target, so nothing was signed. */
+  | "target_not_servable";
 
 export type SessionMode = "delegated" | "kpass" | "wallet";
 
