@@ -34,7 +34,7 @@ Four of them, discovered through Kite's `ksearch` catalog, priced in USDC on Bas
 | PrintMoneyLab · Kimchi Premium | Upbit vs Binance spread via live FX | $0.002 |
 | IP402 · Geolocation & ASN | IP geolocation and ASN ownership | $0.001 |
 
-They go through the same mandate as everything else. A merchant that spikes its price, swaps its payee, or demands an unauthorized chain is refused before a signature exists. Being real buys it no extra trust.
+They go through the same mandate as everything else. A merchant that spikes its price, swaps its payee, demands an unauthorized chain, or cannot answer about the mandate's target at all is refused before a signature exists. Being real buys it no extra trust.
 
 ## Why Kite is not decorative here
 
@@ -195,7 +195,8 @@ approved with a passkey.
 
 ## Safety
 
-- **Policy is evaluated before a signature exists.** Seven refusal codes, each with a test: `session_expired`, `session_endpoint_forbidden`, `session_asset_forbidden`, `payment_target_forbidden`, `session_rule_exceeded`, `session_total_exceeded`, `payment_nonce_replay_detected`.
+- **Policy is evaluated before a signature exists.** Eight refusal codes: `session_expired`, `session_endpoint_forbidden`, `session_asset_forbidden`, `payment_target_forbidden`, `session_rule_exceeded`, `session_total_exceeded`, `payment_nonce_replay_detected`, `target_not_servable`.
+- **A merchant that cannot answer is refused rather than paid.** A token-security desk pointed at an address with no bytecode on its own chain takes the money and returns HTTP 404, leaving the payment held and nothing delivered. Brokro checks the target is a deployed contract on the merchant's chain before it signs.
 - **Spend reservations are atomic leases.** Concurrent calls on one session cannot race past `maxTotalAmountUsd`; there is a test that runs them in parallel and checks.
 - **The verifier contains no model.** Citation resolution, field-path checking and quoted-value comparison are plain TypeScript. A model can write a dossier but cannot talk the verifier into accepting a claim.
 - **The agent cannot assert its own authorization.** `passkeyVerified` defaults to `false` and a session records `ownerAuthorization` as `none`, `eip191-wallet-signature` or `kite-passport-passkey`. An earlier version hardcoded `true`; that is exactly the claim a spending-limit product cannot afford to get wrong.
