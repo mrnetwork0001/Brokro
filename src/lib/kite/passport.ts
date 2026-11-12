@@ -25,7 +25,6 @@
  */
 
 import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -51,7 +50,24 @@ export function getPassportAgentDid(): string | undefined {
   return did.length > 0 ? did : undefined;
 }
 
-function resolveKpassBinary(): string | null {
+/**
+ * Filesystem access is loaded dynamically on purpose.
+ *
+ * A static `existsSync` on a computed path makes Turbopack trace the entire
+ * project into the serverless bundle, which slows deploys and can breach size
+ * limits. Nothing here runs on serverless anyway: that path uses the bridge.
+ */
+async function fsExists(path: string): Promise<boolean> {
+  try {
+    const { access } = await import("node:fs/promises");
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveKpassBinary(): Promise<string | null> {
   const candidates = [
     process.env.KPASS_BIN,
     join(homedir(), ".local", "bin", "kpass"),
@@ -59,7 +75,7 @@ function resolveKpassBinary(): string | null {
     "/usr/local/bin/kpass",
   ].filter((p): p is string => Boolean(p));
   for (const path of candidates) {
-    if (existsSync(path)) return path;
+    if (await fsExists(path)) return path;
   }
   return null;
 }
@@ -69,17 +85,17 @@ function resolveKpassBinary(): string | null {
  * auth lives in the home config. Passing the key path explicitly keeps the two
  * halves together wherever the server happens to be started from.
  */
-function runtimeKeyArgs(): string[] {
+async function runtimeKeyArgs(): Promise<string[]> {
   const explicit = process.env.KPASS_RUNTIME_KEY_FILE;
   const path = explicit || join(homedir(), ".kite-passport", "runtime.key");
-  return existsSync(path) ? ["--key-file", path] : [];
+  return (await fsExists(path)) ? ["--key-file", path] : [];
 }
 
 async function runKpass(
   args: string[],
   timeoutMs: number,
 ): Promise<Record<string, unknown> | null> {
-  const bin = resolveKpassBinary();
+  const bin = await resolveKpassBinary();
   if (!bin) return null;
   try {
     const { stdout } = await execFileAsync(
@@ -269,7 +285,7 @@ export async function payViaPassportSession(params: {
   body?: string;
   idempotencyKey?: string;
 }): Promise<PassportPaymentResult> {
-  const bin = resolveKpassBinary();
+  const bin = await resolveKpassBinary();
   if (!bin) {
     // No CLI here: forward to a host that has one rather than reach for a key.
     if (getBridgeUrl() && getBridgeSecret()) return payViaBridge(params);
@@ -285,7 +301,7 @@ export async function payViaPassportSession(params: {
     params.method || "GET",
     "--idempotency-key",
     params.idempotencyKey || `brokro-${randomUUID()}`,
-    ...runtimeKeyArgs(),
+    ...(await runtimeKeyArgs()),
   ];
   if (params.headers) args.push("--headers", JSON.stringify(params.headers));
   if (params.body) args.push("--body", params.body);
@@ -427,7 +443,7 @@ export async function resolveSettlementRail(): Promise<{
     };
   }
 
-  if (!resolveKpassBinary()) {
+  if (!(await resolveKpassBinary())) {
     // A configured bridge keeps the keyless rail available to a runtime that
     // cannot run a CLI, which is the whole point of having one.
     if (getBridgeUrl() && getBridgeSecret()) {
