@@ -218,9 +218,27 @@ try {
   // ── The explorer page for the bridge transaction ────────────────────────
   if (want("basescan")) {
     const chain = readJson(join(ROOT, "data/onchain.json"));
-    const url = chain.txs?.bridge?.explorer;
+    // Basescan hard-blocks headless Chrome at the bot check. Blockscout is an
+    // equally real Base explorer reading the same chain, and it serves. The
+    // README and youtube description still link Basescan for humans.
+    const url = chain.txs?.bridge?.blockscout || chain.txs?.bridge?.explorer;
     if (!url) throw new Error("data/onchain.json has no bridge tx; run scripts/onchain.mjs");
-    await page.goto(url, 9000);
+    // Basescan sits behind a bot check that headless Chrome trips. Give it time
+    // to clear, then verify we are actually looking at the transaction rather
+    // than an interstitial: filming a "Performing security verification" page
+    // as on-chain proof would be worse than having no shot at all.
+    await page.goto(url, 12000);
+    let cleared = false;
+    for (let i = 0; i < 20; i++) {
+      const t = await page.js(`document.body.innerText.slice(0, 2000)`);
+      if (t && t.indexOf("security verification") < 0 && t.indexOf("Just a moment") < 0 && (t.indexOf("Transaction details") >= 0 || t.indexOf("Transaction Hash") >= 0 || t.indexOf("Success") >= 0)) { cleared = true; break; }
+      await sleep(2000);
+    }
+    if (!cleared) {
+      console.error("basescan: still behind the bot check; not filming an interstitial");
+      throw new Error("basescan blocked");
+    }
+    log("  basescan cleared the bot check");
     await page.js(OVERLAY);
     await record(page, "basescan", async (at) => {
       await sleep(1600);

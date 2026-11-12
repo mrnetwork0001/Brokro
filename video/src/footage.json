@@ -3,10 +3,24 @@
   "file": "footage/basescan.mp4",
   "width": 1600,
   "height": 900,
-  "durationFrames": 228,
+  "durationFrames": 227,
   "marks": {
    "basescan_tx": 48,
    "basescan_detail": 168
+  },
+  "rects": {
+   "details": {
+    "x": 280,
+    "y": 360,
+    "w": 900,
+    "h": 190
+   },
+   "from": {
+    "x": 280,
+    "y": 580,
+    "w": 900,
+    "h": 100
+   }
   }
  },
  "landing": {
@@ -16,6 +30,14 @@
   "durationFrames": 221,
   "marks": {
    "landing_stack": 143
+  },
+  "rects": {
+   "stack": {
+    "x": 150,
+    "y": 120,
+    "w": 1300,
+    "h": 700
+   }
   }
  },
  "passport": {
@@ -27,11 +49,19 @@
    "passport_panel": 26,
    "passport_allowance": 138
   },
-  "panel": {
-   "x": 286,
-   "y": 237,
-   "width": 400,
-   "height": 761
+  "rects": {
+   "panel": {
+    "x": 286,
+    "y": 250,
+    "w": 400,
+    "h": 430
+   },
+   "allowance": {
+    "x": 286,
+    "y": 600,
+    "w": 400,
+    "h": 260
+   }
   }
  },
  "receipts": {
@@ -42,11 +72,13 @@
   "marks": {
    "receipts_table": 102
   },
-  "table": {
-   "x": 735,
-   "y": -440,
-   "width": 828,
-   "height": 646
+  "rects": {
+   "table": {
+    "x": 520,
+    "y": 240,
+    "w": 1050,
+    "h": 560
+   }
   }
  },
  "run": {
@@ -60,6 +92,26 @@
    "run_quarantine": 86,
    "run_settled": 506,
    "run_complete": 927
+  },
+  "rects": {
+   "trace": {
+    "x": 520,
+    "y": 300,
+    "w": 1050,
+    "h": 540
+   },
+   "step1": {
+    "x": 520,
+    "y": 330,
+    "w": 1050,
+    "h": 200
+   },
+   "kpis": {
+    "x": 200,
+    "y": 70,
+    "w": 1370,
+    "h": 130
+   }
   }
  }
 }

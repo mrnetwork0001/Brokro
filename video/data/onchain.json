@@ -22,7 +22,8 @@
           "to": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
           "amount": "0.001"
         }
-      ]
+      ],
+      "blockscout": "https://base.blockscout.com/tx/0x61298b6612cdb30c9a23d84541da7e93635746fa3ad904364dcabdd3774b10f8"
     },
     "passport": {
       "label": "Otto AI Token Security, first payment through the Kite Passport allowance",
@@ -38,7 +39,8 @@
           "to": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
           "amount": "0.001"
         }
-      ]
+      ],
+      "blockscout": "https://base.blockscout.com/tx/0xb5563b5e338ab94750134d18252c96aadfe9cdf4909ddad828961f31419dd35b"
     },
     "otto1": {
       "label": "Otto AI Token Security, signer rail",
@@ -54,7 +56,8 @@
           "to": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
           "amount": "0.001"
         }
-      ]
+      ],
+      "blockscout": "https://base.blockscout.com/tx/0x6b5f2f808e0a3db1996a2368e3bdff943e5158c3b543e1d2bea49816dff8e1e4"
     },
     "otto2": {
       "label": "Otto AI DEX Price, signer rail",
@@ -70,7 +73,8 @@
           "to": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
           "amount": "0.001"
         }
-      ]
+      ],
+      "blockscout": "https://base.blockscout.com/tx/0x530519ba8f100ee7e5b9f95ca16a17708ecafae5013cabdee7921aed76886a22"
     },
     "pml": {
       "label": "PrintMoneyLab Kimchi Premium, signer rail",
@@ -86,7 +90,8 @@
           "to": "0xcF9223eCe895258dEa8D288AEBcf846Ab8E342fB",
           "amount": "0.002"
         }
-      ]
+      ],
+      "blockscout": "https://base.blockscout.com/tx/0x9ad6fe9eacfa4488172f25e32b53aaf40acc1ff7cea5dcae3bb9048aec92eb4b"
     }
   },
   "wallets": {

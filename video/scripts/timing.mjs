@@ -19,7 +19,12 @@ const TRIM_ORDER = ["shop", "deployed", "ceiling", "problem", "close", "gas", "v
 // Words the voice is given phonetically (script.json `say`) are shown as written.
 // Words given phonetically in script.json `say` are shown as written.
 const DISPLAY = { brokroh: "Brokro", brok: "Brokro", serv: "SERV" };
-const show = (w) => { const k = w.toLowerCase().replace(/[^a-z]/g, ""); return DISPLAY[k] ? w.replace(/[A-Za-z]+/, DISPLAY[k]) : w; };
+const show = (w) => {
+  const k = w.toLowerCase().replace(/[^a-z]/g, "");
+  if (!DISPLAY[k]) return w;
+  const tail = w.match(/[^A-Za-z]*$/)?.[0] ?? "";
+  return DISPLAY[k] + tail;
+};
 const script = JSON.parse(readFileSync(join(ROOT, "script.json"), "utf8"));
 const dur = (f) => parseFloat(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", f]).toString());
 const wordsOf = (id) => JSON.parse(readFileSync(join(ROOT, ".cache/words", `${id}.json`), "utf8"));
