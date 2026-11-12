@@ -22,10 +22,14 @@ export const PRESET_MANDATES: ProcurementMandate[] = [
     id: "mandate-kite-supplier",
     title: "Pre-Swap Token & Agent Wallet Safety Check (Kite / Base)",
     targetEntity: "gokite.ai / gokite-ai",
-    targetIdentifier: "0x7aB6f3ed87C42eF0aDb67Ed95090f8bF5240149e",
+    // The settlement asset the agent would actually be swapping, on the chain
+    // the third-party desks index. Pointing this at the Kite-side bridged
+    // USDC.e made every Base-only merchant answer HTTP 404: that contract has
+    // no bytecode on Base, so there was nothing for them to screen.
+    targetIdentifier: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     counterpartyAmountUsd: 500,
     prompt:
-      "Before letting my agent swap $500 USDC or grant checkout approval, screen gokite.ai DNS/TLS posture, inspect on-chain bytecode for 0x7aB6f3ed87C42eF0aDb67Ed95090f8bF5240149e across Kite & Base, and verify active open-source engineering via Dolphin inside a hard x402 cap.",
+      "Before letting my agent swap $500 USDC or grant checkout approval, screen gokite.ai DNS/TLS posture, inspect on-chain bytecode and token-security posture for the Base USDC settlement contract 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 that the swap would route through, and verify active open-source engineering via Dolphin inside a hard x402 cap.",
     requiredDimensions: ["domain_posture", "onchain_contract", "osint_activity"],
   },
   {
