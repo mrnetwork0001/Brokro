@@ -524,8 +524,18 @@ export async function procureFromExternalMerchant(params: {
       url,
       method: merchant.method,
       headers: { Accept: "application/json" },
-      // Stable per (merchant, mandate target): a retry must not buy twice.
-      idempotencyKey: `brokro-${merchant.id}-${params.mandate.identifier}`.slice(0, 120),
+      // Scoped to the session, not just to (merchant, mandate target). Within
+      // one run the key is stable, so a retry cannot buy the same resource
+      // twice. Across runs it differs, because each run mints a new session.
+      //
+      // Keying on the mandate alone made every later purchase of the same
+      // resource collide with the first: Kite answered "the earlier attempt
+      // with this idempotency key was not charged", and the merchant came back
+      // `failed` on every repeat demo.
+      idempotencyKey: `brokro-${merchant.id}-${params.session.sessionId ?? params.mandate.identifier}`.slice(
+        0,
+        120,
+      ),
     });
 
     if (paid.ok) {
