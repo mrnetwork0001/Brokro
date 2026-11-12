@@ -156,9 +156,21 @@ export function buildSessionSignMessage(input: {
   maxTotalAmountUsd: number;
   ttlMinutes: number;
   nonce: string;
+  /**
+   * Whether this mandate may also pay independent third-party merchants on
+   * their own chains. It is part of the signed text because an owner who signs
+   * a spending limit has not thereby agreed to spend it with strangers —
+   * granting that silently would make the signature attest to less than the
+   * session actually permits.
+   */
+  externalMerchants?: boolean;
+  /** Hosts the mandate may pay, when third-party commerce is authorized. */
+  externalHosts?: string[];
+  /** CAIP-2 networks the mandate may pay on, beyond the home Kite chain. */
+  externalNetworks?: string[];
 }): string {
   const net = resolveKiteNetwork(input.network);
-  return [
+  const lines = [
     "Brokro — Kite Agent Spending Session Authorization",
     `Owner: ${input.ownerAddress}`,
     `Agent: ${input.agentAddress}`,
@@ -166,8 +178,17 @@ export function buildSessionSignMessage(input: {
     `Max Per Transaction: $${input.maxAmountPerTxUsd.toFixed(4)}`,
     `Max Session Budget: $${input.maxTotalAmountUsd.toFixed(4)}`,
     `TTL: ${input.ttlMinutes} minutes`,
-    `Nonce: ${input.nonce}`,
-  ].join("\n");
+  ];
+  if (input.externalMerchants) {
+    lines.push(
+      `Third-Party Merchants: AUTHORIZED on ${(input.externalNetworks ?? []).join(", ") || "none"}`,
+      `Authorized Merchant Hosts: ${(input.externalHosts ?? []).join(", ") || "none"}`,
+    );
+  } else {
+    lines.push("Third-Party Merchants: NOT AUTHORIZED");
+  }
+  lines.push(`Nonce: ${input.nonce}`);
+  return lines.join("\n");
 }
 
 export async function verifySessionWalletSignature(params: {

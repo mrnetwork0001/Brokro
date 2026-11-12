@@ -2022,3 +2022,23 @@ body { overflow-x: clip; }
   .tl-dot,
   .receipt-table tbody tr { transition: none; }
 }
+
+/* ── In-app surfaces run edge to edge ─────────────────────────────────────── */
+/*
+ * The landing and pricing pages keep `.shell`'s 4% side gutter, where it buys
+ * reading comfort. The desk and receipt views are working surfaces: the receipt
+ * tables, the step grid and the sticky rail all compete for horizontal room, so
+ * they spend the whole viewport rather than giving 8% of it to whitespace.
+ *
+ * Specificity (0,2,0 via :has) intentionally beats the narrow-viewport
+ * `.shell` padding override further up, so this holds at every width.
+ */
+.shell:has(.app-shell) {
+  padding-inline: 0;
+}
+
+/* The rail and main column carry their own edge inset so their borders are not
+   clipped by the viewport once the gutter is gone. */
+.shell:has(.app-shell) .app-shell {
+  padding-inline: 12px;
+}

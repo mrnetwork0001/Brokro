@@ -208,27 +208,31 @@ export default function ClearinghouseDeskPage() {
       const ownerAddress = accounts?.[0];
       if (!ownerAddress) throw new Error("No wallet account selected.");
 
-      const net = status?.network;
-      const agentAddr = status?.wallets.buyerAddress || ownerAddress;
-      const nonce = Math.random().toString(36).slice(2, 12);
-      const networkId = net?.id || "testnet";
-      const caip2 = net?.caip2 || "eip155:2368";
-      const symbol = net?.asset.symbol || "pieUSD";
+      // Ask the server for the canonical text rather than rebuilding it here:
+      // two copies of the format drifted once already, and the owner would
+      // have signed limits that did not match the session they got.
+      const prepUrl = new URL("/api/sessions", window.location.origin);
+      prepUrl.searchParams.set("ownerAddress", ownerAddress);
+      prepUrl.searchParams.set("maxAmountPerTxUsd", String(maxPerTxUsd));
+      prepUrl.searchParams.set("maxTotalAmountUsd", String(maxTotalUsd));
+      prepUrl.searchParams.set("ttlMinutes", String(ttlMinutes));
+      prepUrl.searchParams.set("includeExternalMerchants", String(includeExternalMerchants));
 
-      const message = [
-        "Brokro — Kite Agent Spending Session Authorization",
-        `Owner: ${ownerAddress}`,
-        `Agent: ${agentAddr}`,
-        `Network: ${caip2} (${symbol})`,
-        `Max Per Transaction: $${maxPerTxUsd.toFixed(4)}`,
-        `Max Session Budget: $${maxTotalUsd.toFixed(4)}`,
-        `TTL: ${ttlMinutes} minutes`,
-        `Nonce: ${nonce}`,
-      ].join("\n");
+      const prepRes = await fetch(prepUrl);
+      const prep = (await prepRes.json()) as {
+        ok?: boolean;
+        message?: string;
+        nonce?: string;
+        network?: string;
+        message_?: string;
+      };
+      if (!prepRes.ok || !prep.message || !prep.nonce) {
+        throw new Error("Could not build the mandate text to sign.");
+      }
 
       const signature = (await eth.request({
         method: "personal_sign",
-        params: [message, ownerAddress],
+        params: [prep.message, ownerAddress],
       })) as string;
 
       const res = await fetch("/api/sessions", {
@@ -237,12 +241,13 @@ export default function ClearinghouseDeskPage() {
         body: JSON.stringify({
           mode: "wallet",
           ownerAddress,
-          network: networkId,
+          network: prep.network,
           maxAmountPerTxUsd: maxPerTxUsd,
           maxTotalAmountUsd: maxTotalUsd,
           ttlMinutes,
-          nonce,
+          nonce: prep.nonce,
           walletSignature: signature,
+          includeExternalMerchants,
           taskSummary: `Wallet-signed mandate for ${targetEntity}`,
         }),
       });
