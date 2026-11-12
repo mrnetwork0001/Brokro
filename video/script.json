@@ -4,8 +4,8 @@
   "note": "Every figure, hash and time spoken here is read from data/onchain.json or the live site. The rogue line in scene 1 is the verbatim description of the v-rogue-inject fixture in src/lib/partners/catalog.ts.",
   "voices": {
     "narrator": {
-      "name": "TBC",
-      "id": "TBC",
+      "name": "Ola - Nigerian Storyteller",
+      "id": "8P18CIVcRlwP98FOjZDm",
       "settings": {
         "stability": 0.5,
         "similarity_boost": 0.8,
@@ -14,12 +14,13 @@
       }
     },
     "rogue": {
-      "name": "TBC",
-      "id": "TBC",
+      "name": "Eric - Smooth, Trustworthy",
+      "id": "cjVigY5qzO86Huf0OWal",
+      "note": "Cast against type: the listing must sound reasonable until you hear what it asks for.",
       "settings": {
-        "stability": 0.35,
-        "similarity_boost": 0.75,
-        "style": 0.6,
+        "stability": 0.6,
+        "similarity_boost": 0.8,
+        "style": 0.15,
         "use_speaker_boost": true
       }
     }
@@ -36,7 +37,8 @@
         },
         {
           "voice": "narrator",
-          "text": "That is a real listing, talking to the agent that came to buy from it."
+          "text": "That is a real listing, talking to the agent that came to buy from it.",
+          "say": "That is a real listing, talking to the agent that came to buy from it."
         }
       ]
     },
@@ -69,7 +71,8 @@
       "lines": [
         {
           "voice": "narrator",
-          "text": "Brokro. Your agent gets a signed mandate, not your wallet."
+          "text": "Brokro. Your agent gets a signed mandate, not your wallet.",
+          "say": "Brok-roh. Your agent gets a signed mandate, not your wallet."
         }
       ]
     },
@@ -91,7 +94,8 @@
       "lines": [
         {
           "voice": "narrator",
-          "text": "Which means the agent cannot raise it. On this rail Brokro holds no private key at all. It asks. Kite decides."
+          "text": "Which means the agent cannot raise it. On this rail Brokro holds no private key at all. It asks. Kite decides.",
+          "say": "Which means the agent cannot raise it. On this rail Brok-roh holds no private key at all. It asks. Kite decides."
         }
       ]
     },
@@ -102,7 +106,8 @@
       "lines": [
         {
           "voice": "narrator",
-          "text": "Inside that ceiling it shops. Otto AI, PrintMoneyLab, IP402. Independent businesses, found through Kite's catalogue, priced in real dollars on Base. Nobody introduced them to us."
+          "text": "Inside that ceiling it shops. Otto AI, PrintMoneyLab, IP402. Independent businesses, found through Kite's catalogue, priced in real dollars on Base.",
+          "say": "Inside that ceiling it shops. Otto AI, PrintMoneyLab, IP402. Independent businesses, found through Kite's catalogue, priced in real dollars on Base."
         }
       ]
     },
@@ -113,7 +118,8 @@
       "lines": [
         {
           "voice": "narrator",
-          "text": "Then the part nobody demos. Every claim in the report is traced back to a field a merchant actually returned. Cite a real field but misquote it, and the sentence is deleted. The checker is plain code with no model in it, so nothing can argue its way past it."
+          "text": "Then the part nobody demos. Every claim is traced back to a field a merchant actually returned. Cite a real field but misquote it, and the sentence is deleted. The checker is plain code with no model in it.",
+          "say": "Then the part nobody demos. Every claim is traced back to a field a merchant actually returned. Cite a real field but misquote it, and the sentence is deleted. The checker is plain code with no model in it."
         }
       ]
     },
@@ -146,7 +152,8 @@
       "lines": [
         {
           "voice": "narrator",
-          "text": "The live site runs where no command line can. The easy fix was to give it a hot key. Instead it asks a machine that can, over an authenticated bridge. Neither end holds a key. The ceiling is still Kite's."
+          "text": "The live site runs where no command line can. The easy fix was a hot key. Instead it asks a machine that can. Neither end holds a key. The ceiling is still Kite's.",
+          "say": "The live site runs where no command line can. The easy fix was a hot key. Instead it asks a machine that can. Neither end holds a key. The ceiling is still Kite's."
         }
       ]
     },
@@ -157,7 +164,8 @@
       "lines": [
         {
           "voice": "narrator",
-          "text": "Serv reasoning screens the sellers. Kite is the identity and the limit. Reppo scores the result, after the fact. Brokro. The money does not move unless the answer checks out."
+          "text": "SERV reasoning screens the sellers. Kite is the identity and the limit. Brokro. The money does not move unless the answer checks out.",
+          "say": "SERV reasoning screens the sellers. Kite is the identity and the limit. Brok-roh. The money does not move unless the answer checks out."
         }
       ]
     }
