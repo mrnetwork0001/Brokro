@@ -664,7 +664,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Judge fast path ───────────────────────────────────────────── */}
-      {/* ââ What it runs on ââââââââââââââââââââââââââââââââââ */}
+      {/* ── What it runs on ───────────────────────────────────────────── */}
       <section id="stack" className="section-block" data-reveal>
         <h2 className="section-heading">What it runs on</h2>
         <p className="lede">
@@ -726,7 +726,7 @@ export default async function LandingPage() {
               HTTP <span className="mono">402</span> with EIP-3009 authorizations,
               settled through the Pieverse facilitator. The facilitator broadcasts
               and pays the gas, so the buyer wallet needs{" "}
-              <strong>no native token</strong> â which is what makes an agent
+              <strong>no native token</strong> — which is what makes an agent
               wallet practical to fund at all.
             </p>
             <p className="tl-text" style={{ marginTop: "10px" }}>
@@ -744,7 +744,7 @@ export default async function LandingPage() {
             </div>
             <p className="tl-text">
               The finished dossier goes to an evaluator panel Brokro does not
-              control, after settlement rather than before â there is no point
+              control, after settlement rather than before — there is no point
               paying a panel to assess a report whose citations we can already prove
               wrong ourselves.
             </p>
