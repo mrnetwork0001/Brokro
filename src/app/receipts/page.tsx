@@ -29,7 +29,7 @@ export default function ReceiptsIndexPage() {
       <section className="section-block">
         <h1 className="section-heading">Every run leaves a receipt</h1>
         <p className="section-sub">
-          A procurement an agent made on someone&apos;s behalf should be auditable after the
+          A procurement an agent made on someone&rsquo;s behalf should be auditable after the
           fact by anyone holding the link. Each receipt below publishes what was bought, what
           was refused and why, the exact spend against the mandate, and a{" "}
           <span className="mono">SHA-256</span> digest over the whole record.

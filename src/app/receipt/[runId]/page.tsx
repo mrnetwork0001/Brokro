@@ -97,7 +97,7 @@ export default async function ReceiptPage({
               </div>
             </div>
             <p className="section-sub">
-              Each finding&apos;s quoted evidence compared against the value living at its
+              Each finding&rsquo;s quoted evidence compared against the value living at its
               cited field path — not merely that the field exists.
             </p>
           </article>
@@ -131,7 +131,7 @@ export default async function ReceiptPage({
             </p>
             <p className="section-sub">
               Computed over the dossier, every receipt outcome, the value-match count and the
-              mandate id. Re-derivable from this page&apos;s JSON.
+              mandate id. Re-derivable from this page&rsquo;s JSON.
             </p>
           </article>
         )}
@@ -274,7 +274,7 @@ export default async function ReceiptPage({
         {external.length > 0 && (
           <p className="section-sub">
             {external.length} of these settled against{" "}
-            <strong>independent third-party merchants</strong> rather than Brokro&apos;s own
+            <strong>independent third-party merchants</strong> rather than Brokro&rsquo;s own
             supply nodes.
           </p>
         )}

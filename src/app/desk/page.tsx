@@ -821,7 +821,7 @@ export default function ClearinghouseDeskPage() {
                       >
                         Independent merchants price in USDC on Base, so that is
                         where money moves. {status.network.name} stays the home
-                        chain for Brokro&apos;s own priced endpoint.
+                        chain for Brokro&rsquo;s own priced endpoint.
                       </div>
                     </td>
                   </tr>
@@ -863,7 +863,7 @@ export default function ClearinghouseDeskPage() {
                 }}
               >
                 This ceiling is enforced by <strong>Kite</strong>, not by Brokro. Change it in
-                the owner&apos;s Passport and this figure moves without a redeploy — and
+                the owner&rsquo;s Passport and this figure moves without a redeploy — and
                 Brokro cannot raise it, because on this rail it holds no key to raise it with.
               </div>
             </section>

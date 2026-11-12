@@ -78,13 +78,13 @@ export default async function PricingPage() {
             <span>Per-call, no subscription</span>
           </div>
           <h1 className="hero-title">
-            You pay for a <em>verified</em> answer. If it doesn&apos;t verify, you pay
+            You pay for a <em>verified</em> answer. If it doesn&rsquo;t verify, you pay
             nothing.
           </h1>
           <p className="hero-lede">
             Brokro sells one thing: a counterparty dossier where every claim resolves to raw
             bytes a merchant actually returned. It is priced per call over{" "}
-            <span className="mono">x402</span>, settled by your own agent&apos;s signature,
+            <span className="mono">x402</span>, settled by your own agent&rsquo;s signature,
             and charged only when deterministic verification passes end to end.
           </p>
           <p className="hero-lede">
@@ -143,7 +143,7 @@ export default async function PricingPage() {
         <h2 className="section-heading">What one call costs us</h2>
         <p className="section-sub">
           Read live from third-party <span className="mono">402</span> headers at page load.
-          These are independent businesses setting their own prices — we don&apos;t control
+          These are independent businesses setting their own prices — we don&rsquo;t control
           this column.
         </p>
 
@@ -248,7 +248,7 @@ export default async function PricingPage() {
             <div className="sheet-header">
               <div>
                 <span className="sheet-kicker">View 2 — fully loaded</span>
-                <h3 className="sheet-title">If every input were bought at arm&apos;s length</h3>
+                <h3 className="sheet-title">If every input were bought at arm&rsquo;s length</h3>
               </div>
               <span className="badge">{pct(fullMarginLow)}–{pct(fullMarginHigh)}</span>
             </div>
@@ -284,7 +284,7 @@ export default async function PricingPage() {
         </div>
 
         <p className="section-sub" style={{ marginTop: "1rem" }}>
-          <strong>The distinction matters.</strong> Brokro&apos;s own supply nodes pay a
+          <strong>The distinction matters.</strong> Brokro&rsquo;s own supply nodes pay a
           treasury address Brokro controls. Counting that as cost would inflate the apparent
           cost base and counting it as revenue would inflate the apparent margin — so it is
           labelled an internal transfer and shown separately in both views.
@@ -300,9 +300,9 @@ export default async function PricingPage() {
               <h3 className="sheet-title">Someone bears the verification risk</h3>
             </div>
             <p>
-              A buyer&apos;s agent that assembles four feeds itself still has to decide
+              A buyer&rsquo;s agent that assembles four feeds itself still has to decide
               whether its own summary is faithful. Brokro moves that risk onto the seller:
-              if the dossier doesn&apos;t verify, the seller eats the cost of the work and
+              if the dossier doesn&rsquo;t verify, the seller eats the cost of the work and
               the buyer is charged nothing.
             </p>
           </article>
@@ -324,7 +324,7 @@ export default async function PricingPage() {
             <p>
               Every call leaves a published receipt: what was bought, what was refused and
               why, the exact spend against the mandate, and a digest over all of it. That is
-              what makes an agent&apos;s purchase defensible after the fact.
+              what makes an agent&rsquo;s purchase defensible after the fact.
             </p>
           </article>
         </div>
@@ -376,7 +376,7 @@ export default async function PricingPage() {
       <section className="section-block">
         <h2 className="section-heading">Actual recorded activity</h2>
         <p className="section-sub">
-          Read from this deployment&apos;s ledger, not a projection.
+          Read from this deployment&rsquo;s ledger, not a projection.
         </p>
         <table className="receipt-table">
           <tbody>
