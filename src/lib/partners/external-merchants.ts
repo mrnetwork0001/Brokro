@@ -26,6 +26,7 @@ import {
   getBuyerAccount,
   getExternalSettlementMode,
 } from "../kite/wallets";
+import { payViaPassportSession, resolveSettlementRail } from "../kite/passport";
 import { reserveSessionSpend } from "../kite/session";
 import type { SessionPolicy, SettlementReceipt } from "../types";
 import {
@@ -515,7 +516,69 @@ export async function procureFromExternalMerchant(params: {
     });
   }
 
-  // mode === "on": verify we can actually cover it before signing.
+  // Prefer the keyless rail: if the owner's Passport can pay this under an
+  // allowance they approved, Brokro never touches a private key at all.
+  const railChoice = await resolveSettlementRail();
+  if (railChoice.rail === "kite-passport-session") {
+    const paid = await payViaPassportSession({
+      url,
+      method: merchant.method,
+      headers: { Accept: "application/json" },
+      // Stable per (merchant, mandate target): a retry must not buy twice.
+      idempotencyKey: `brokro-${merchant.id}-${params.mandate.identifier}`.slice(0, 120),
+    });
+
+    if (paid.ok) {
+      reservation.lease.commit();
+      const policy = paid.delegation;
+      return {
+        receiptId: `rcpt_${randomUUID().slice(0, 10)}`,
+        vendorId: merchant.id,
+        vendorName: merchant.name,
+        endpoint: url,
+        httpStatus: paid.httpStatus ?? 200,
+        advertisedUsd: merchant.advertisedPriceUsd,
+        challengedUsd: challenge.challengedUsd,
+        settledUsd: paid.amountUsd ?? challenge.challengedUsd,
+        assetSymbol: net.asset.symbol === "pieUSD" ? "pieUSD" : "USDC.e",
+        caip2Network: net.caip2 === "eip155:2366" ? "eip155:2366" : "eip155:2368",
+        outcome: "settled",
+        executionEngine: "pieverse-x402-exact",
+        onChain: Boolean(paid.txHash),
+        txHash: paid.txHash,
+        explorerUrl: paid.txHash ? settlementExplorerTxUrl(net, paid.txHash) : undefined,
+        payer: paid.payer,
+        payTo: challenge.payTo!,
+        latencyMs: Date.now() - started,
+        timestamp: new Date().toISOString(),
+        payload: paid.body,
+        externalMerchant: true,
+        settlementNetwork: paid.caip2Network ?? net.caip2,
+        settlementAssetSymbol: net.asset.symbol,
+        settlementRail: "kite-passport-session",
+        enforcedByOwnerPolicy: policy?.maxAmountPerTx
+          ? `Kite Passport allowance: max ${policy.currency ?? "USD"} ${policy.maxAmountPerTx} per payment, ${policy.maxTotalAmount ?? "?"} per ${policy.renewalPeriod ?? "period"}. Brokro holds no key on this rail.`
+          : "Kite Passport allowance enforced by Kite.",
+      };
+    }
+
+    // Passport refused or could not settle. Say so rather than silently
+    // falling back to the hot key, which is a different trust model.
+    reservation.lease.release();
+    return failedReceipt({
+      merchant,
+      net,
+      url,
+      httpStatus: paid.httpStatus ?? 402,
+      challengedUsd: challenge.challengedUsd,
+      outcome: "failed",
+      policyHint: `Kite Passport declined: ${paid.errorMessage || paid.errorCode || "no settlement returned"}.`,
+      payTo: challenge.payTo!,
+      startedAt: started,
+    });
+  }
+
+  // Signer rail: verify we can actually cover it before signing.
   const buyer = getBuyerAccount();
   const balance = await readSettlementBalance(net, buyer.address);
   if (balance.readable && balance.usd < challenge.challengedUsd) {
@@ -624,6 +687,8 @@ export async function procureFromExternalMerchant(params: {
       externalMerchant: true,
       settlementNetwork: net.caip2,
       settlementAssetSymbol: net.asset.symbol,
+      settlementRail: "eip3009-signer",
+      enforcedByOwnerPolicy: `Brokro's own session policy: max $${session.maxAmountPerTxUsd} per payment, $${session.maxTotalAmountUsd} per session. Signed with Brokro's key.`,
     };
   } catch (err) {
     reservation.lease.release();

@@ -147,6 +147,18 @@ export interface SettlementReceipt {
    * travels with the receipt rather than being inferred from a missing hash.
    */
   settlementNote?: string;
+  /**
+   * Which key actually moved the money.
+   *
+   * `eip3009-signer`: Brokro held a hot mainnet key and signed the
+   * authorization itself. `kite-passport-session`: Brokro held no key, and the
+   * owner's Kite Passport paid under an allowance it enforces. "Whose key paid
+   * for this" is the first question an auditor asks, so the receipt answers it
+   * rather than leaving it to be inferred from the deployment.
+   */
+  settlementRail?: "kite-passport-session" | "eip3009-signer";
+  /** The spending limit Passport enforced, quoted as Passport reported it. */
+  enforcedByOwnerPolicy?: string;
   latencyMs: number;
   timestamp: string;
   payload?: Record<string, unknown>;

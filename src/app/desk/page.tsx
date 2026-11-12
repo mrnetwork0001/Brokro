@@ -56,6 +56,29 @@ interface StatusPayload {
       starting_price?: { amount: string };
     }>;
   };
+  passport: {
+    identity: {
+      resolved: boolean;
+      did?: string;
+      name?: string;
+      kind?: string;
+      verifiedTier?: string;
+      activeKeyCount?: number;
+      note: string;
+    };
+    allowance: {
+      active: boolean;
+      amountUsd?: number;
+      spentUsd?: number;
+      leftUsd?: number;
+      period?: string;
+      resetAt?: string;
+      ownerMessage?: string;
+      note: string;
+    };
+    rail: "kite-passport-session" | "eip3009-signer";
+    railReason: string;
+  };
   engines: {
     servConfigured: boolean;
     dolphinConfigured: boolean;
@@ -584,6 +607,15 @@ export default function ClearinghouseDeskPage() {
               <strong>{status.kpass.kpassVersion || "ready"}</strong>
             </div>
           )}
+          {status.passport?.allowance.active && (
+            <div className="rail-status-row">
+              <span>allowance</span>
+              <strong>
+                ${status.passport.allowance.leftUsd} / $
+                {status.passport.allowance.amountUsd}
+              </strong>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -705,6 +737,108 @@ export default function ClearinghouseDeskPage() {
           <div className="desk-layout">
         {/* ── LEFT COLUMN: Mandate & Session Policy Configurator ────────── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+          {/* ── Kite Agent Passport: who is spending, and under whose ceiling ── */}
+          {status?.passport && (
+            <section className="sheet">
+              <div className="sheet-header">
+                <div>
+                  <div className="sheet-kicker">0 · Agent Identity &amp; Spending Ceiling</div>
+                  <h2 className="sheet-title">Kite Agent Passport</h2>
+                </div>
+                <span
+                  className={`badge ${
+                    status.passport.rail === "kite-passport-session" ? "ok" : "warn"
+                  }`}
+                >
+                  {status.passport.rail === "kite-passport-session"
+                    ? "KEYLESS · PASSPORT PAYS"
+                    : "BROKRO SIGNS · HOT KEY"}
+                </span>
+              </div>
+
+              <div
+                className="mono"
+                style={{ fontSize: "11.5px", color: "var(--ink-muted)", marginBottom: "12px", lineHeight: 1.5 }}
+              >
+                {status.passport.railReason}
+              </div>
+
+              <table className="receipt-table">
+                <tbody>
+                  <tr>
+                    <td style={{ width: "40%" }}>Agent DID</td>
+                    <td className="mono">
+                      {status.passport.identity.did ?? "not configured"}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Directory</td>
+                    <td>
+                      {status.passport.identity.resolved ? (
+                        <span className="badge ok">RESOLVES PUBLICLY</span>
+                      ) : (
+                        <span className="badge warn">UNRESOLVED</span>
+                      )}
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          color: "var(--ink-muted)",
+                          marginTop: "4px",
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {status.passport.identity.note}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Approved signing keys</td>
+                    <td className="mono">{status.passport.identity.activeKeyCount ?? 0}</td>
+                  </tr>
+                  <tr>
+                    <td>Owner allowance</td>
+                    <td>
+                      {status.passport.allowance.active ? (
+                        <>
+                          <span className="badge ok">
+                            ${status.passport.allowance.leftUsd} LEFT OF $
+                            {status.passport.allowance.amountUsd}{" "}
+                            {(status.passport.allowance.period ?? "").toUpperCase()}
+                          </span>
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "var(--ink-muted)",
+                              marginTop: "4px",
+                              lineHeight: 1.45,
+                            }}
+                          >
+                            {status.passport.allowance.ownerMessage}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="badge warn">NOT SET</span>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div
+                style={{
+                  fontSize: "11.5px",
+                  color: "var(--ink-muted)",
+                  marginTop: "12px",
+                  lineHeight: 1.55,
+                }}
+              >
+                This ceiling is enforced by <strong>Kite</strong>, not by Brokro. Change it in
+                the owner&apos;s Passport and this figure moves without a redeploy — and
+                Brokro cannot raise it, because on this rail it holds no key to raise it with.
+              </div>
+            </section>
+          )}
+
           <section id="sec-mandate" className="sheet">
             <div className="sheet-header">
               <div>
