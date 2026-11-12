@@ -1,0 +1,10 @@
+{
+  "note": "Partner logos are fetched from each project's own site and used unaltered. They are gitignored: they are not ours to redistribute, and scripts/logos.mjs re-fetches them.",
+  "sources": {
+    "openserv.png": "https://framerusercontent.com/images/ySKQfz5JGfYSGq9sekFqBL5iisY.png (icon referenced by openserv.ai)",
+    "kite.svg": "https://agentpassport.ai/images/kite_agent_passport_logo.svg",
+    "x402.svg": "https://x402.org/wp-content/uploads/sites/10/2026/06/x402_logo.svg",
+    "reppo.png": "https://eval.reppo.xyz/icon.png"
+  },
+  "treatment": "Scaled to fit a white card, nothing recoloured, cropped or redrawn. Each sits on a light card because two of the marks are dark and would vanish into the copper background."
+}
