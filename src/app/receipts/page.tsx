@@ -38,11 +38,19 @@ export default function ReceiptsIndexPage() {
         {rows.length === 0 ? (
           <article className="sheet">
             <p>
-              No runs recorded yet in this deployment.{" "}
+              No runs recorded on this instance.{" "}
               <Link href="/desk" className="link-underline">
                 Run a procurement on the desk
               </Link>{" "}
-              and it will appear here with a shareable permalink.
+              and its receipt appears here, with a permalink you can share.
+            </p>
+            <p style={{ marginTop: "12px" }}>
+              Brokro runs with no database: the ledger lives in the memory of
+              whichever instance served the run. On this serverless deployment a
+              later request can land on a different instance, which has its own
+              empty ledger, so this page is not a complete history of every run
+              ever made — it is what this instance has seen. The receipt digest
+              is what makes a single receipt verifiable, not this index.
             </p>
           </article>
         ) : (

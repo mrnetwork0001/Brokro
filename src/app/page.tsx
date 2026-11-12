@@ -214,7 +214,15 @@ export default async function LandingPage() {
             <span className="hero-stat-k">Verified dossier</span>
           </div>
           <div className="hero-stat">
-            <div className="hero-stat-v">{ledger.adversarialBlockedCount}</div>
+            {/*
+              A bare 0 here reads as "this desk has never refused anything",
+              which is the opposite of what it measures. With no runs on this
+              instance there is nothing to report, so report nothing, the same
+              way the cheapest-402 stat does when no merchant answers.
+            */}
+            <div className="hero-stat-v">
+              {ledger.totalRuns === 0 ? "—" : ledger.adversarialBlockedCount}
+            </div>
             <span className="hero-stat-k">Challenges refused</span>
           </div>
           <div className="hero-stat">
@@ -227,8 +235,9 @@ export default async function LandingPage() {
 
         <p className="hero-foot">
           Prices and verdicts read at page load from live third-party{" "}
-          <span className="mono">402</span> headers; counts from this deployment&rsquo;s
-          ledger. Nothing here is a fixture.
+          <span className="mono">402</span> headers; counts from the ledger of the
+          instance serving this page, which holds only the runs it has seen
+          itself. Nothing here is a fixture.
         </p>
       </section>
       {/* ── The three failures ─────────────────────────────────────────── */}
