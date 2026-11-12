@@ -195,13 +195,21 @@ export default async function LandingPage() {
           </div>
           <div className="hero-stat">
             <div className="hero-stat-v">
-              {cheapestExternal !== null ? `$${cheapestExternal.toFixed(4)}` : "—"}
+              {cheapestExternal !== null ? (
+                <>
+                  <span className="sign">$</span>
+                  {cheapestExternal.toFixed(4)}
+                </>
+              ) : (
+                "—"
+              )}
             </div>
             <span className="hero-stat-k">Cheapest 402</span>
           </div>
           <div className="hero-stat">
             <div className="hero-stat-v">
-              ${WHOLESALE_BUNDLE_PRICE_USD.toFixed(2)}
+              <span className="sign">$</span>
+              {WHOLESALE_BUNDLE_PRICE_USD.toFixed(2)}
             </div>
             <span className="hero-stat-k">Verified dossier</span>
           </div>
@@ -211,7 +219,7 @@ export default async function LandingPage() {
           </div>
           <div className="hero-stat">
             <div className="hero-stat-v">
-              $0.00
+              <span className="sign">$</span>0.00
             </div>
             <span className="hero-stat-k">Charged if unverified</span>
           </div>

@@ -1041,6 +1041,31 @@ a {
   letter-spacing: -0.02em;
 }
 
+/*
+ * Newsreader's dollar sign is the double-barred (cifrao) form, which reads as a
+ * typographic oddity rather than as money. Figures stay in the serif; the sign
+ * itself is set in the sans, optically sized and nudged to sit on the same
+ * baseline weight as the digits beside it.
+ */
+.hero-stat-v .sign,
+.sheet-title .sign,
+.section-heading .sign,
+.hero-title .sign,
+.stat-v .sign {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.88em;
+  letter-spacing: 0;
+  margin-right: 0.03em;
+  /*
+   * Stays a plain inline box: inline-block would be an atomic inline and let
+   * the line break between "(" and "$0.05" in a narrow heading. position/top
+   * gives the same optical nudge without introducing a break opportunity.
+   */
+  position: relative;
+  top: -0.012em;
+}
+
 .hero-stat-v small {
   font-family: var(--font-mono);
   font-size: 13px;

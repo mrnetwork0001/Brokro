@@ -1149,7 +1149,9 @@ export default function ClearinghouseDeskPage() {
             <div className="sheet-header">
               <div>
                 <div className="sheet-kicker">3 · Zero-Hallucination Escrow</div>
-                <h2 className="sheet-title">Wholesale x402 Desk ($0.05)</h2>
+                <h2 className="sheet-title">
+                  Wholesale x402 Desk (<span className="sign">$</span>0.05)
+                </h2>
               </div>
               <span className="badge ok">Pay-Only-If-Verified</span>
             </div>
