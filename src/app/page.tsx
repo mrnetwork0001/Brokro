@@ -123,7 +123,6 @@ export default async function LandingPage() {
             { id: "economics", label: "Economics" },
             { id: "try", label: "Try it" },
           ]}
-          cta={{ href: "/desk", label: "Launch App" }}
         />
       </header>
 
