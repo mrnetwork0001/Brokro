@@ -17,6 +17,7 @@ import { PRESET_MANDATES, WHOLESALE_BUNDLE_PRICE_USD } from "@/lib/partners/cata
 import { isDolphinConfigured } from "@/lib/partners/dolphin";
 import { isReppoConfigured } from "@/lib/partners/reppo";
 import { isServConfigured } from "@/lib/serv";
+import { EXTERNAL_MERCHANT_NETWORKS } from "@/lib/partners/external-merchants";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,11 @@ export async function GET() {
       allowance: passportAllowance,
       rail: settlementRail.rail,
       railReason: settlementRail.reason,
+      // Where money actually moves, which is not the configured home chain.
+      // Third-party merchants price in USDC on Base, so a run that buys from
+      // them settles there while `network` still describes Kite. Reporting
+      // only the home chain made the desk look like it settled on Kite.
+      settlesOn: EXTERNAL_MERCHANT_NETWORKS,
     },
     engines: {
       servConfigured: isServConfigured(),

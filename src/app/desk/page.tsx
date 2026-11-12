@@ -78,6 +78,7 @@ interface StatusPayload {
     };
     rail: "kite-passport-session" | "eip3009-signer";
     railReason: string;
+    settlesOn?: string[];
   };
   engines: {
     servConfigured: boolean;
@@ -581,11 +582,17 @@ export default function ClearinghouseDeskPage() {
       {status && (
         <div className="rail-status">
           <div className="rail-status-row">
-            <span>Network</span>
+            <span>Home chain</span>
             <strong>
               {status.network.name} ({status.network.caip2})
             </strong>
           </div>
+          {status.passport?.settlesOn && status.passport.settlesOn.length > 0 && (
+            <div className="rail-status-row">
+              <span>Settles on</span>
+              <strong>{status.passport.settlesOn.join(", ")}</strong>
+            </div>
+          )}
           <div className="rail-status-row">
             <span>Facilitator</span>
             <strong>{status.facilitator.ok ? "healthy" : "unreachable"}</strong>
@@ -648,9 +655,14 @@ export default function ClearinghouseDeskPage() {
           </button>
           {status && (
             <>
-              <span className="pill" title={status.facilitator.facilitatorUrl}>
+              <span
+                className="pill"
+                title={`Home chain. Third-party merchants settle on ${
+                  status.passport?.settlesOn?.join(", ") || "their own chain"
+                }.`}
+              >
                 <span className={`dot ${status.facilitator.ok ? "ok" : "warn"}`} />
-                {status.network.name} ({status.network.caip2})
+                Home: {status.network.name} ({status.network.caip2})
               </span>
               <a
                 href={status.wallets.buyerExplorerUrl}
@@ -794,6 +806,24 @@ export default function ClearinghouseDeskPage() {
                   <tr>
                     <td>Approved signing keys</td>
                     <td className="mono">{status.passport.identity.activeKeyCount ?? 0}</td>
+                  </tr>
+                  <tr>
+                    <td>Settles on</td>
+                    <td className="mono">
+                      {status.passport.settlesOn?.join(", ") || "\u2014"}
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          color: "var(--ink-muted)",
+                          marginTop: "4px",
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        Independent merchants price in USDC on Base, so that is
+                        where money moves. {status.network.name} stays the home
+                        chain for Brokro&apos;s own priced endpoint.
+                      </div>
+                    </td>
                   </tr>
                   <tr>
                     <td>Owner allowance</td>
