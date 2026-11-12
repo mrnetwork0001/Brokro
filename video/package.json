@@ -17,7 +17,8 @@
     "onchain": "node scripts/onchain.mjs",
     "capture": "node scripts/capture.mjs",
     "encode": "node scripts/encode.mjs",
-    "stills": "node scripts/stills.mjs"
+    "stills": "node scripts/stills.mjs",
+    "logos": "node scripts/logos.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.530",
