@@ -204,7 +204,13 @@ export default function ClearinghouseDeskPage() {
     }
   }, []);
 
+  // Fetch live chain, facilitator and merchant state once the desk is on
+  // screen. Both calls are async and only set state after their network round
+  // trip, so this is not the synchronous cascade the rule is aimed at; the
+  // data cannot be fetched during render or on the server, because the whole
+  // point is that it is read fresh at the moment an operator opens the desk.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadStatus();
     void handleProbeEcosystem();
   }, [loadStatus, handleProbeEcosystem]);

@@ -23,10 +23,7 @@ const SHOTS = [
 const out = { readAt: new Date().toISOString(), chain: "base", chainId: 8453, asset: { address: USDC, symbol: "USDC", decimals: 6 }, txs: {} };
 
 for (const shot of SHOTS) {
-  const [r, tx] = await Promise.all([
-    c.getTransactionReceipt({ hash: shot.hash }),
-    c.getTransaction({ hash: shot.hash }),
-  ]);
+  const r = await c.getTransactionReceipt({ hash: shot.hash });
   const block = await c.getBlock({ blockNumber: r.blockNumber });
   const transfers = [];
   for (const log of r.logs) {

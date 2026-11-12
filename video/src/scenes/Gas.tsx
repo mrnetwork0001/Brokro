@@ -3,11 +3,11 @@ import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remo
 import { Browser, syncTo } from "../ui/Footage";
 import { C, mono, sans, TONE } from "../theme";
 import { scene, wordAt } from "../timing";
-import onchain from "../../data/onchain.json";
+import { ONCHAIN } from "../onchain";
 import { Words } from "../ui/Words";
 import { clamp, soft } from "../ui/motion";
 
-const DATA = onchain as any;
+const DATA = ONCHAIN;
 
 /** Who paid the gas, and the balance that never needed any. */
 export const Gas: React.FC = () => {

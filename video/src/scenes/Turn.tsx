@@ -7,7 +7,7 @@ import { clamp, soft } from "../ui/motion";
 /** The turn: the mark, the name, the line. Copper, full bleed, spent once. */
 export const Turn: React.FC = () => {
   const f = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const { fps, height } = useVideoConfig();
   const tone = TONE.copper;
   const from = scene("turn").from;
   const name = wordAt("turn", "Brokro.") - from;

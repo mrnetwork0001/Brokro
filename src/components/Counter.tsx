@@ -29,8 +29,9 @@ export function Counter({
     const el = ref.current;
     if (!el) return;
 
+    // `shown` already starts at `value`, so with reduced motion there is
+    // nothing to set: leave the final figure on screen and never animate.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setShown(value);
       return;
     }
 

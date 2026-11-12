@@ -3,10 +3,10 @@ import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remo
 import { C, mono, sans, TONE } from "../theme";
 import { scene, wordAt } from "../timing";
 import { Browser, syncTo } from "../ui/Footage";
-import onchain from "../../data/onchain.json";
+import { ONCHAIN } from "../onchain";
 import { clamp, soft } from "../ui/motion";
 
-const TX = (onchain as any).txs.bridge;
+const TX = ONCHAIN.txs.bridge;
 
 /** The on-chain proof. Every figure here is read from data/onchain.json. */
 export const Proof: React.FC = () => {

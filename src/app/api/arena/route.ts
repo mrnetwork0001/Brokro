@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const reqUrl = new URL(req.url);
     const body = (await req.json().catch(() => ({}))) as {
       presetId?: string;
       mandate?: Partial<ProcurementMandate>;

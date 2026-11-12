@@ -37,8 +37,14 @@ export function DeskRail({
   const [active, setActive] = useState<string>(sections[0]?.id ?? "");
 
   // Restore the operator's last choice.
+  //
+  // This has to happen after mount, not during render: localStorage does not
+  // exist on the server, so reading it during render would make the server
+  // and the client disagree about whether the rail is collapsed and produce a
+  // hydration mismatch. One extra render on mount is the cost of that.
   useEffect(() => {
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCollapsed(window.localStorage.getItem(STORAGE_KEY) === "1");
     } catch {
       /* storage unavailable — default to expanded */
