@@ -80,17 +80,13 @@ async function resolveKpassBinary(): Promise<string | null> {
   return null;
 }
 
-/**
- * `kpass agent *` resolves its runtime key from the working directory, while
- * auth lives in the home config. Passing the key path explicitly keeps the two
- * halves together wherever the server happens to be started from.
- */
-async function runtimeKeyArgs(): Promise<string[]> {
-  const explicit = process.env.KPASS_RUNTIME_KEY_FILE;
-  const path = explicit || join(homedir(), ".kite-passport", "runtime.key");
-  return (await fsExists(path)) ? ["--key-file", path] : [];
-}
 
+/**
+ * `session execute` authorizes with the account token against the owner's
+ * allowance, not with the runtime key, and rejects `--key-file` outright.
+ * The runtime key is still read by kpass itself from KPASS_RUNTIME_KEY_FILE
+ * or ~/.kite-passport/runtime.key for the `agent` commands that sign.
+ */
 async function runKpass(
   args: string[],
   timeoutMs: number,
@@ -301,7 +297,6 @@ export async function payViaPassportSession(params: {
     params.method || "GET",
     "--idempotency-key",
     params.idempotencyKey || `brokro-${randomUUID()}`,
-    ...(await runtimeKeyArgs()),
   ];
   if (params.headers) args.push("--headers", JSON.stringify(params.headers));
   if (params.body) args.push("--body", params.body);
