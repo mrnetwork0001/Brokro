@@ -114,6 +114,40 @@ async function runKpass(
   }
 }
 
+/**
+ * Reads identity and allowance from the bridge.
+ *
+ * Without this a serverless deployment pays correctly through the bridge but
+ * reports its own allowance as unset, because the reads only ever consulted a
+ * local CLI that is not there. Cached briefly: the desk polls status, and the
+ * owner lowering a limit should still show up within seconds.
+ */
+let bridgeStatusCache: { at: number; data: Record<string, unknown> } | null = null;
+const BRIDGE_STATUS_TTL_MS = 5_000;
+
+async function readBridgeStatus(): Promise<Record<string, unknown> | null> {
+  const base = getBridgeUrl();
+  const secret = getBridgeSecret();
+  if (!base || !secret) return null;
+
+  if (bridgeStatusCache && Date.now() - bridgeStatusCache.at < BRIDGE_STATUS_TTL_MS) {
+    return bridgeStatusCache.data;
+  }
+
+  try {
+    const res = await fetch(`${base}/api/passport/status`, {
+      headers: { Authorization: `Bearer ${secret}` },
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as Record<string, unknown>;
+    bridgeStatusCache = { at: Date.now(), data };
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export interface PassportAllowance {
   /** Whether an owner-approved allowance is active right now. */
   active: boolean;
@@ -143,6 +177,9 @@ function num(value: unknown): number | undefined {
 export async function readPassportAllowance(): Promise<PassportAllowance> {
   const out = await runKpass(["allowance", "status"], 8_000);
   if (!out) {
+    const bridged = await readBridgeStatus();
+    const allowance = bridged?.allowance as PassportAllowance | undefined;
+    if (allowance) return allowance;
     return { active: false, note: "kpass CLI not available on this host." };
   }
   if (out.status === "error") {
@@ -195,6 +232,9 @@ export async function readPassportIdentity(): Promise<PassportIdentity> {
   }
   const out = await runKpass(["agent", "directory", "get", did], 8_000);
   if (!out || out.status === "error") {
+    const bridged = await readBridgeStatus();
+    const identity = bridged?.identity as PassportIdentity | undefined;
+    if (identity) return identity;
     return {
       resolved: false,
       did,
