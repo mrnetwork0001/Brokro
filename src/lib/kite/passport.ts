@@ -31,6 +31,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { randomUUID } from "node:crypto";
 import { getSettlementNetwork } from "../x402/settlement-networks";
+import { getBridgeSecret, getBridgeUrl } from "./passport-bridge";
 
 const execFileAsync = promisify(execFile);
 
@@ -270,6 +271,8 @@ export async function payViaPassportSession(params: {
 }): Promise<PassportPaymentResult> {
   const bin = resolveKpassBinary();
   if (!bin) {
+    // No CLI here: forward to a host that has one rather than reach for a key.
+    if (getBridgeUrl() && getBridgeSecret()) return payViaBridge(params);
     return { ok: false, errorMessage: "kpass CLI not installed on this host." };
   }
 
@@ -347,6 +350,63 @@ export async function payViaPassportSession(params: {
 }
 
 /**
+ * Pays through a remote Brokro instance that can run the CLI.
+ *
+ * Keeps the keyless rail available to a serverless deployment: without this,
+ * Vercel would have to fall back to holding a hot private key, which is a
+ * strictly worse trust model than forwarding to a host the owner controls.
+ */
+async function payViaBridge(params: {
+  url: string;
+  method?: "GET" | "POST";
+  headers?: Record<string, string>;
+  body?: string;
+  idempotencyKey?: string;
+}): Promise<PassportPaymentResult> {
+  const base = getBridgeUrl();
+  const secret = getBridgeSecret();
+  if (!base || !secret) {
+    return { ok: false, errorMessage: "No Passport bridge configured." };
+  }
+
+  try {
+    const res = await fetch(`${base}/api/passport/pay`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${secret}`,
+      },
+      body: JSON.stringify(params),
+      signal: AbortSignal.timeout(60_000),
+    });
+
+    const payload = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      result?: PassportPaymentResult;
+      error?: string;
+      message?: string;
+    };
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        errorCode: payload.error,
+        errorMessage: payload.message || `Passport bridge returned HTTP ${res.status}.`,
+      };
+    }
+    if (!payload.result) {
+      return { ok: false, errorMessage: "Passport bridge returned no result." };
+    }
+    return payload.result;
+  } catch (err) {
+    return {
+      ok: false,
+      errorMessage: `Passport bridge unreachable: ${(err as Error).message}`,
+    };
+  }
+}
+
+/**
  * Decides which rail a run should use, and says why.
  *
  * The reason travels with the decision because "which key paid for this" is
@@ -368,11 +428,20 @@ export async function resolveSettlementRail(): Promise<{
   }
 
   if (!resolveKpassBinary()) {
+    // A configured bridge keeps the keyless rail available to a runtime that
+    // cannot run a CLI, which is the whole point of having one.
+    if (getBridgeUrl() && getBridgeSecret()) {
+      return {
+        rail: "kite-passport-session",
+        reason:
+          "No local kpass CLI, so payments are forwarded to the configured Passport bridge. Brokro still holds no key.",
+      };
+    }
     if (preference === "passport") {
       return {
         rail: "eip3009-signer",
         reason:
-          "BROKR_SETTLEMENT_RAIL=passport, but the kpass CLI is not on this host (a serverless runtime cannot run it). Falling back to the signer.",
+          "BROKR_SETTLEMENT_RAIL=passport, but there is no kpass CLI and no Passport bridge on this host. Falling back to the signer.",
       };
     }
     return {
