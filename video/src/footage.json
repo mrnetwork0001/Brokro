@@ -1,0 +1,65 @@
+{
+ "basescan": {
+  "file": "footage/basescan.mp4",
+  "width": 1600,
+  "height": 900,
+  "durationFrames": 228,
+  "marks": {
+   "basescan_tx": 48,
+   "basescan_detail": 168
+  }
+ },
+ "landing": {
+  "file": "footage/landing.mp4",
+  "width": 1600,
+  "height": 900,
+  "durationFrames": 221,
+  "marks": {
+   "landing_stack": 143
+  }
+ },
+ "passport": {
+  "file": "footage/passport.mp4",
+  "width": 1600,
+  "height": 900,
+  "durationFrames": 215,
+  "marks": {
+   "passport_panel": 26,
+   "passport_allowance": 138
+  },
+  "panel": {
+   "x": 286,
+   "y": 237,
+   "width": 400,
+   "height": 761
+  }
+ },
+ "receipts": {
+  "file": "footage/receipts.mp4",
+  "width": 1600,
+  "height": 900,
+  "durationFrames": 203,
+  "marks": {
+   "receipts_table": 102
+  },
+  "table": {
+   "x": 735,
+   "y": -440,
+   "width": 828,
+   "height": 646
+  }
+ },
+ "run": {
+  "file": "footage/run.mp4",
+  "width": 1600,
+  "height": 900,
+  "durationFrames": 1041,
+  "marks": {
+   "run_hover": 45,
+   "run_click": 56,
+   "run_quarantine": 86,
+   "run_settled": 506,
+   "run_complete": 927
+  }
+ }
+}
