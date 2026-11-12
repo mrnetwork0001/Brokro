@@ -17,6 +17,20 @@ export function getBuyerAccount() {
   return privateKeyToAccount(pk);
 }
 
+/**
+ * Is there a real signer behind `getBuyerAccount()`?
+ *
+ * On the Passport rail there deliberately is not: the deployment holds no
+ * private key, so the account falls back to the well-known Hardhat test key
+ * and its address is a placeholder, not a wallet anyone funds. Callers that
+ * publish that address must say so, or they advertise a famous test account
+ * as if it were the agent's own.
+ */
+export function hasConfiguredBuyerSigner(): boolean {
+  const raw = process.env.BROKR_BUYER_PRIVATE_KEY?.trim();
+  return Boolean(raw && raw.startsWith("0x") && raw !== TEST_ONLY_FALLBACK_PK);
+}
+
 export function getMerchantPayTo(): `0x${string}` {
   const configured = process.env.BROKR_MERCHANT_PAY_TO?.trim();
   if (configured && /^0x[a-fA-F0-9]{40}$/.test(configured)) {

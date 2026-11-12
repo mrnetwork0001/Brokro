@@ -11,7 +11,12 @@ import {
   getActiveKiteNetwork,
   readKiteWalletBalances,
 } from "@/lib/kite/networks";
-import { getBuyerAccount, getMerchantPayTo, isPaymentsEnabled } from "@/lib/kite/wallets";
+import {
+  getBuyerAccount,
+  getMerchantPayTo,
+  hasConfiguredBuyerSigner,
+  isPaymentsEnabled,
+} from "@/lib/kite/wallets";
 import { getLedgerSummary } from "@/lib/ledger";
 import { PRESET_MANDATES, WHOLESALE_BUNDLE_PRICE_USD } from "@/lib/partners/catalog";
 import { isDolphinConfigured } from "@/lib/partners/dolphin";
@@ -66,6 +71,13 @@ export async function GET() {
     },
     wallets: {
       buyerAddress: buyer.address,
+      // On the Passport rail this deployment holds no key, so the address
+      // above is the well-known Hardhat test account, not a wallet anyone
+      // funds. Say so rather than publishing it as the agent's own.
+      signerConfigured: hasConfiguredBuyerSigner(),
+      buyerAddressNote: hasConfiguredBuyerSigner()
+        ? "Signing key configured for this deployment."
+        : "No signing key on this deployment: it settles through the owner's Kite Passport allowance. This address is the deterministic test-key placeholder and holds nothing.",
       buyerExplorerUrl: explorerAddressUrl(net, buyer.address),
       merchantPayTo,
       merchantExplorerUrl: explorerAddressUrl(net, merchantPayTo),
