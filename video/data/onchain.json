@@ -1,0 +1,104 @@
+{
+  "readAt": "2026-11-12T10:18:01.518Z",
+  "chain": "base",
+  "chainId": 8453,
+  "asset": {
+    "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "symbol": "USDC",
+    "decimals": 6
+  },
+  "txs": {
+    "bridge": {
+      "label": "Otto AI DEX Price, paid through the Passport bridge from the deployed site",
+      "hash": "0x61298b6612cdb30c9a23d84541da7e93635746fa3ad904364dcabdd3774b10f8",
+      "block": 56434229,
+      "status": "success",
+      "utc": "2026-11-12T09:53:41.000Z",
+      "gasPaidBy": "0x97acce27d5069544480bde0f04d9f47d7422a016",
+      "explorer": "https://basescan.org/tx/0x61298b6612cdb30c9a23d84541da7e93635746fa3ad904364dcabdd3774b10f8",
+      "transfers": [
+        {
+          "from": "0x86d97809E8f481B58CcbCe4f0d26C28F91413E2C",
+          "to": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
+          "amount": "0.001"
+        }
+      ]
+    },
+    "passport": {
+      "label": "Otto AI Token Security, first payment through the Kite Passport allowance",
+      "hash": "0xb5563b5e338ab94750134d18252c96aadfe9cdf4909ddad828961f31419dd35b",
+      "block": 56422906,
+      "status": "success",
+      "utc": "2026-11-12T09:15:56.000Z",
+      "gasPaidBy": "0xe72f0af4cf41356d433723547f1412ca27fbb1b8",
+      "explorer": "https://basescan.org/tx/0xb5563b5e338ab94750134d18252c96aadfe9cdf4909ddad828961f31419dd35b",
+      "transfers": [
+        {
+          "from": "0x86d97809E8f481B58CcbCe4f0d26C28F91413E2C",
+          "to": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
+          "amount": "0.001"
+        }
+      ]
+    },
+    "otto1": {
+      "label": "Otto AI Token Security, signer rail",
+      "hash": "0x6b5f2f808e0a3db1996a2368e3bdff943e5158c3b543e1d2bea49816dff8e1e4",
+      "block": 56411237,
+      "status": "success",
+      "utc": "2026-11-12T08:37:03.000Z",
+      "gasPaidBy": "0x93f6601151ccb08f333ab4b1cccfb1e188c0be44",
+      "explorer": "https://basescan.org/tx/0x6b5f2f808e0a3db1996a2368e3bdff943e5158c3b543e1d2bea49816dff8e1e4",
+      "transfers": [
+        {
+          "from": "0xD57411EF1A903B1954D23A869CF7A7C3df847bCc",
+          "to": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
+          "amount": "0.001"
+        }
+      ]
+    },
+    "otto2": {
+      "label": "Otto AI DEX Price, signer rail",
+      "hash": "0x530519ba8f100ee7e5b9f95ca16a17708ecafae5013cabdee7921aed76886a22",
+      "block": 56411248,
+      "status": "success",
+      "utc": "2026-11-12T08:37:05.000Z",
+      "gasPaidBy": "0x59b7ebc67a3d627fabaf06768c818638452ae704",
+      "explorer": "https://basescan.org/tx/0x530519ba8f100ee7e5b9f95ca16a17708ecafae5013cabdee7921aed76886a22",
+      "transfers": [
+        {
+          "from": "0xD57411EF1A903B1954D23A869CF7A7C3df847bCc",
+          "to": "0x0E84dDEdAaE6A779c462C22a59F301EC31B6b808",
+          "amount": "0.001"
+        }
+      ]
+    },
+    "pml": {
+      "label": "PrintMoneyLab Kimchi Premium, signer rail",
+      "hash": "0x9ad6fe9eacfa4488172f25e32b53aaf40acc1ff7cea5dcae3bb9048aec92eb4b",
+      "block": 56411263,
+      "status": "success",
+      "utc": "2026-11-12T08:37:08.000Z",
+      "gasPaidBy": "0x8f5cb67b49555e614892b7233cfddebfb746e531",
+      "explorer": "https://basescan.org/tx/0x9ad6fe9eacfa4488172f25e32b53aaf40acc1ff7cea5dcae3bb9048aec92eb4b",
+      "transfers": [
+        {
+          "from": "0xD57411EF1A903B1954D23A869CF7A7C3df847bCc",
+          "to": "0xcF9223eCe895258dEa8D288AEBcf846Ab8E342fB",
+          "amount": "0.002"
+        }
+      ]
+    }
+  },
+  "wallets": {
+    "passportWallet": {
+      "address": "0x86d97809E8f481B58CcbCe4f0d26C28F91413E2C",
+      "usdc": "11.998",
+      "eth": "0"
+    },
+    "buyerSigner": {
+      "address": "0xD57411EF1A903B1954D23A869CF7A7C3df847bCc",
+      "usdc": "1.996",
+      "eth": "0"
+    }
+  }
+}

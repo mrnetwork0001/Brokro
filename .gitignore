@@ -16,3 +16,10 @@ CLAUDE.md
 
 # Personal Claude Code overrides (machine-specific permission grants)
 .claude/settings.local.json
+
+# Demo film: heavy build artefacts stay out of the repo
+video/node_modules/
+video/out/
+video/.cache/
+video/public/footage/
+video/public/stills/
