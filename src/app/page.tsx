@@ -121,6 +121,7 @@ export default async function LandingPage() {
             { id: "merchants", label: "Merchants" },
             { id: "mandate", label: "Mandate" },
             { id: "economics", label: "Economics" },
+            { id: "stack", label: "Stack" },
             { id: "try", label: "Try it" },
           ]}
         />
@@ -663,6 +664,105 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Judge fast path ───────────────────────────────────────────── */}
+      {/* ââ What it runs on ââââââââââââââââââââââââââââââââââ */}
+      <section id="stack" className="section-block" data-reveal>
+        <h2 className="section-heading">What it runs on</h2>
+        <p className="lede">
+          Four pieces do the work that matters. None of them is decoration: remove
+          any one and a specific guarantee on this page stops being true.
+        </p>
+
+        <div className="grid-2" style={{ marginTop: "28px" }}>
+          <div className="sheet" data-reveal data-reveal-delay="1">
+            <div className="sheet-header">
+              <div>
+                <div className="sheet-kicker">Reasoning</div>
+                <h3 className="sheet-title">OpenServ SERV</h3>
+              </div>
+            </div>
+            <p className="tl-text">
+              <span className="mono">serv_prompt_guard</span> reads every vendor&apos;s
+              own manifest before a payment is offered, and{" "}
+              <span className="mono">serv_shadow_agent</span> writes the dossier under
+              a rule it cannot break: cite a field a merchant actually returned, or
+              the finding is deleted. <span className="mono">/v1/responses</span>{" "}
+              streams the planner&apos;s reasoning to the desk while it runs.
+            </p>
+            <p className="tl-text" style={{ marginTop: "10px" }}>
+              <strong>Remove it:</strong> nothing screens a hostile vendor, and
+              nothing writes a dossier to check.
+            </p>
+          </div>
+
+          <div className="sheet" data-reveal data-reveal-delay="2">
+            <div className="sheet-header">
+              <div>
+                <div className="sheet-kicker">Identity &amp; spending limits</div>
+                <h3 className="sheet-title">Kite Agent Passport</h3>
+              </div>
+            </div>
+            <p className="tl-text">
+              Brokro is published at{" "}
+              <span className="mono">did:kite:auto-lvcj3a:brokro</span> and resolves
+              for anyone, not just for us. On the Passport rail it holds{" "}
+              <strong>no private key at all</strong>: it asks the owner&apos;s
+              Passport to pay, and Kite enforces the weekly allowance the owner
+              approved with a passkey.
+            </p>
+            <p className="tl-text" style={{ marginTop: "10px" }}>
+              <strong>Remove it:</strong> the spending limit becomes something the
+              agent enforces on itself, which is not a limit.
+            </p>
+          </div>
+
+          <div className="sheet" data-reveal data-reveal-delay="3">
+            <div className="sheet-header">
+              <div>
+                <div className="sheet-kicker">Payments</div>
+                <h3 className="sheet-title">x402 &amp; Pieverse</h3>
+              </div>
+            </div>
+            <p className="tl-text">
+              HTTP <span className="mono">402</span> with EIP-3009 authorizations,
+              settled through the Pieverse facilitator. The facilitator broadcasts
+              and pays the gas, so the buyer wallet needs{" "}
+              <strong>no native token</strong> â which is what makes an agent
+              wallet practical to fund at all.
+            </p>
+            <p className="tl-text" style={{ marginTop: "10px" }}>
+              <strong>Remove it:</strong> no open protocol for buying from a merchant
+              nobody introduced you to.
+            </p>
+          </div>
+
+          <div className="sheet" data-reveal data-reveal-delay="4">
+            <div className="sheet-header">
+              <div>
+                <div className="sheet-kicker">Independent scoring</div>
+                <h3 className="sheet-title">Reppo Eval Router</h3>
+              </div>
+            </div>
+            <p className="tl-text">
+              The finished dossier goes to an evaluator panel Brokro does not
+              control, after settlement rather than before â there is no point
+              paying a panel to assess a report whose citations we can already prove
+              wrong ourselves.
+            </p>
+            <p className="tl-text" style={{ marginTop: "10px" }}>
+              <strong>Remove it:</strong> the only judge of the output is the thing
+              that produced it.
+            </p>
+          </div>
+        </div>
+
+        <p className="lede" style={{ marginTop: "26px" }}>
+          Underneath: Next.js 16 on React 19, TypeScript, viem, and{" "}
+          <span className="mono">@x402/core</span>. The verifier that decides what
+          survives is plain TypeScript with no model in it, so a model can write a
+          claim but cannot talk the checker into accepting it.
+        </p>
+      </section>
+
       <section id="try" className="section-block" data-reveal>
         <h2 className="section-heading">Five minutes, zero keys</h2>
         <p className="lede">
