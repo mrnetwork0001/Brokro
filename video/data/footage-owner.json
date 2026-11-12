@@ -1,0 +1,37 @@
+{
+  "source": "Owner screen recording of agentpassport.ai while signed in, 12 November 2026.",
+  "why": "The Kite Passport dashboard is behind a passkey login and cannot be driven headlessly.",
+  "original": {
+    "file": "~/Desktop/kite.mov",
+    "duration": 21.1,
+    "size": "3010x1682",
+    "fps": 120,
+    "hadAudio": true
+  },
+  "treatment": "Muted, trimmed, resampled to 30 fps. No other edit: nothing added, removed or retouched.",
+  "clips": {
+    "kite_allowance": {
+      "in": 6.3,
+      "out": 10.2,
+      "duration": 3.9,
+      "shows": [
+        "$0.002 spent",
+        "$9.998 left",
+        "$10 weekly, resets Nov 19 10:00 GMT+1",
+        "Lifetime spent $0.002",
+        "Approved until Nov 12 2027",
+        "Pays with: USDC on Base"
+      ]
+    },
+    "kite_dash": {
+      "in": 0.6,
+      "out": 4.4,
+      "duration": 3.8,
+      "shows": [
+        "Balance $12.00",
+        "Allowance row"
+      ]
+    }
+  },
+  "note": "The Agents list in this panel includes an agent named __probe__, created by a bad probe during setup. The clip is unedited; the film's camera frames the figures and never moves to that list."
+}
