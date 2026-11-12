@@ -132,13 +132,6 @@ export default async function LandingPage() {
       <section className="hero-stage">
         <div className="hero-stage-inner">
           <div>
-            <div className="hero-eyebrow">
-              <span className="hero-eyebrow-dot" />
-              <span>
-                AGENT COMMERCE CLEARINGHOUSE · {net.caip2} · {net.asset.symbol}
-              </span>
-            </div>
-
             <h1 className="hero-h1">
               The money doesn&apos;t move unless the answer <em>checks out</em>.
             </h1>

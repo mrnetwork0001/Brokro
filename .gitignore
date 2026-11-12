@@ -13,3 +13,6 @@ next-env.d.ts
 # Next.js 16 auto-generates these agent instruction files on dev/build
 AGENTS.md
 CLAUDE.md
+
+# Personal Claude Code overrides (machine-specific permission grants)
+.claude/settings.local.json
