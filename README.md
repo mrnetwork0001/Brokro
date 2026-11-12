@@ -4,9 +4,9 @@
 
 Brokro is a procurement desk for AI agents. You write a brief, set a spending ceiling, and the agent shops real `x402` merchants inside that ceiling, cross-examines what they sold it, and **refuses to call the job done when a claim does not match the bytes the merchant actually returned**. Everything is measured by one number: **how much of the dossier survives verification**, because a finding that cannot be traced to a merchant's own response is deleted rather than shipped.
 
-Built for the OpenServ SERV Hackathon Edition 02 · **Track 02 — Kite** · Not affiliated with Kite AI, OpenServ, Otto AI, PrintMoneyLab or IP402 · Code: `github.com/mrnetwork0001/Brokro` (private; access on request) · Demo: `<VIDEO_URL>` · App: `<DEPLOY_URL>`
+Built for the OpenServ SERV Hackathon Edition 02 · **Track 02 — Kite** · Not affiliated with Kite AI, OpenServ, Otto AI, PrintMoneyLab or IP402 · App: **[trybrokro.vercel.app](https://trybrokro.vercel.app)** · Demo: `<VIDEO_URL>` · Code: `github.com/mrnetwork0001/Brokro` (private; access on request)
 
-**Judges, start here:** open `/desk`, leave every default alone and press **Execute Bounded Procurement**. The run streams six steps live. The two things worth watching are the vendor that gets quarantined before any signature exists, and the receipt table at the end that names which key paid for each purchase.
+**Judges, start here:** open **[trybrokro.vercel.app/desk](https://trybrokro.vercel.app/desk)**, leave every default alone and press **Execute Bounded Procurement**. The run streams six steps live. The two things worth watching are the vendor that gets quarantined before any signature exists, and the receipt table at the end that names which key paid for each purchase.
 
 ---
 
@@ -52,9 +52,9 @@ Brokro's claim is bounded spending. Kite is what makes the bound real rather tha
 | Who holds the key | Brokro, a hot mainnet key | nobody; Passport pays |
 | Who enforces the limit | Brokro's own policy engine | **Kite** |
 | Can the agent widen it | it holds the key, so in principle yes | no |
-| Where it runs | anywhere, including serverless | needs the `kpass` CLI on the host |
+| Where it runs | anywhere, including serverless | needs the `kpass` CLI, directly or through the bridge |
 
-`BROKR_SETTLEMENT_RAIL=auto` prefers Passport and falls back to the signer when the CLI is absent. Every receipt records `settlementRail` and quotes the policy that was enforced, because *whose key moved this money* is the first question an auditor asks.
+`BROKR_SETTLEMENT_RAIL=auto` prefers Passport. A runtime with no CLI forwards to a configured bridge rather than reaching for a key, and only falls back to the signer when there is neither. Every receipt records `settlementRail` and quotes the policy that was enforced, because *whose key moved this money* is the first question an auditor asks.
 
 ## Architecture
 
@@ -114,7 +114,7 @@ flowchart LR
   ALLOW -- "enforces every payment" --> PP["Passport wallet"]
   PP -- "pays merchants" --> M["Merchants"]
   BROKRO["Brokro<br/>the agent"] -- "asks, cannot widen" --> ALLOW
-  SIGNER["Fallback signer key<br/>serverless only"] -- "bounded by local policy" --> M
+  SIGNER["Fallback signer key<br/>no CLI and no bridge"] -- "bounded by local policy" --> M
 ```
 
 | Key | Lives in | Can | Can never |
@@ -122,7 +122,7 @@ flowchart LR
 | Owner's passkey | the owner's device | set and change the allowance | be used by Brokro |
 | Kite allowance | Kite's backend | pay merchants within the ceiling | exceed what the owner approved |
 | Brokro | no key on the Passport rail | request a payment | raise its own ceiling |
-| Fallback signer | server env, serverless only | sign EIP-3009 within local policy | bypass `reserveSessionSpend` |
+| Fallback signer | server env, last resort only | sign EIP-3009 within local policy | bypass `reserveSessionSpend` |
 
 ### A real purchase, end to end
 
@@ -149,6 +149,50 @@ Three more settled the same day through the signer rail, from a wallet holding *
 
 Reproduce them with `npm run settle:external`.
 
+### The deployed site holds no key either
+
+`trybrokro.vercel.app` runs on Vercel, which cannot execute a CLI. Rather than
+give a public deployment a hot mainnet key, it forwards payments to a host that
+can:
+
+```
+trybrokro.vercel.app          no key, no CLI
+        |  POST /api/passport/pay  + bearer
+        v
+brokro.38-49-213-208.sslip.io  kpass + TLS, no key either
+        |  kpass session execute
+        v
+Kite Passport                  enforces the owner's weekly allowance
+        |
+        v
+Otto AI                        real merchant, USDC on Base
+```
+
+A payment over that whole path, on 12 November 2026:
+
+```
+tx         0x61298b6612cdb30c9a23d84541da7e93635746fa3ad904364dcabdd3774b10f8
+block      56,434,229 on Base, status success
+transfer   0.001 USDC  Passport wallet -> Otto AI
+gas        paid by Kite's relayer
+allowance  9.999 -> 9.998 USD
+```
+
+The bridge is deliberately narrow, and each of these was checked against the
+live endpoint rather than asserted:
+
+| Request | Result |
+| --- | --- |
+| no bearer | `401 unauthorized` |
+| wrong bearer | `401 unauthorized`, byte-identical |
+| **correct bearer**, host `evil.example.com` | `403 host_not_payable` |
+| correct bearer, Otto AI | paid |
+
+The third row is the one that matters: holding the real secret still does not
+let a caller redirect the allowance somewhere else. And the ceiling itself lives
+in Kite, so a fully compromised bridge cannot spend past what the owner
+approved with a passkey.
+
 ## Safety
 
 - **Policy is evaluated before a signature exists.** Seven refusal codes, each with a test: `session_expired`, `session_endpoint_forbidden`, `session_asset_forbidden`, `payment_target_forbidden`, `session_rule_exceeded`, `session_total_exceeded`, `payment_nonce_replay_detected`.
@@ -156,7 +200,7 @@ Reproduce them with `npm run settle:external`.
 - **The verifier contains no model.** Citation resolution, field-path checking and quoted-value comparison are plain TypeScript. A model can write a dossier but cannot talk the verifier into accepting a claim.
 - **The agent cannot assert its own authorization.** `passkeyVerified` defaults to `false` and a session records `ownerAuthorization` as `none`, `eip191-wallet-signature` or `kite-passport-passkey`. An earlier version hardcoded `true`; that is exactly the claim a spending-limit product cannot afford to get wrong.
 - **A signature that was not broadcast says so.** An unfunded wallet still produces a cryptographically valid EIP-3009 authorization. Receipts distinguish `SETTLED ON-CHAIN` from `SIGNED, NOT BROADCAST` and carry the facilitator's own reason, rather than leaving it to be inferred from a missing hash.
-- **Tests:** 18 of 18 pass, run 12 November 2026 (`ℹ tests 18 / ℹ pass 18 / ℹ fail 0`).
+- **Tests:** 23 of 23 pass, run 12 November 2026 (`ℹ tests 23 / ℹ pass 23 / ℹ fail 0`). Five of them cover the bridge guards alone.
 
 ## What is real and what is not
 
@@ -179,7 +223,7 @@ Next.js 16.3.5 (App Router, Turbopack), React 19.2.8, TypeScript 5, viem 2.56, `
 npm install
 cp .env.example .env.local
 npm run dev            # http://localhost:3000
-npm test               # 18 tests, no network required
+npm test               # 23 tests, no network required
 npm run typecheck
 npm run diag           # Kite RPC, Pieverse, kpass and SERV key health
 ```
@@ -188,7 +232,8 @@ npm run diag           # Kite RPC, Pieverse, kpass and SERV key health
 | --- | --- |
 | `SERV_API_KEY` | **Required.** SERV Reasoning. Without it the reasoning steps cannot run. |
 | `KITE_NETWORK` | `mainnet` (default, `eip155:2366`, USDC.e) or `testnet`. |
-| `BROKR_SETTLEMENT_RAIL` | `auto` (default) prefers Kite Passport, falls back to the signer. `passport` or `signer` pin one. |
+| `BROKR_SETTLEMENT_RAIL` | `auto` (default) prefers Kite Passport, then the bridge, then the signer. `passport` or `signer` pin one. |
+| `BROKR_PASSPORT_BRIDGE_URL` / `_SECRET` | Lets a serverless deployment pay through a host that has the CLI. Set only the secret on that host to serve the rail; set both on the caller. |
 | `BROKR_KITE_AGENT_DID` | The published agent to show on the desk and record on receipts. |
 | `BROKR_BUYER_PRIVATE_KEY` | Only used on the signer rail. Leave unset when running through Passport. |
 | `BROKR_MERCHANT_PAY_TO` | Where Brokro's own $0.05 wholesale endpoint is paid. |
@@ -210,7 +255,24 @@ kpass allowance status --output json                   # set the ceiling in the 
 
 ## Deploying
 
-`kpass` is a local CLI, so **the Passport rail needs a VPS or container, not serverless**. On Vercel the app runs fine and falls back to the signer rail; the desk says which rail is live so a deployed site never differs silently from the demo.
+`kpass` is a local CLI, so the Passport rail needs a long-lived host. A
+serverless deployment does **not** have to give up the keyless rail for that
+reason: point it at a host that has the CLI and it forwards payments there.
+
+1. **On the host with the CLI** (VPS or container): install `kpass`, log in,
+   approve an allowance, and set `BROKR_PASSPORT_BRIDGE_SECRET`. That alone
+   turns on `POST /api/passport/pay`; without it the route refuses to serve.
+   Put it behind TLS, since the bridge will not pay a non-HTTPS target.
+2. **On Vercel**: set `BROKR_PASSPORT_BRIDGE_URL` and the same secret. Leave
+   `BROKR_BUYER_PRIVATE_KEY` unset, so there is no key to fall back to.
+3. Set the rest of the variables above. `NEXT_PUBLIC_*` are inlined at build
+   time. Do not copy `PORT` or `BROKR_URL` from a local file: a deployed site
+   that advertises `127.0.0.1` as its public origin is the bug
+   `public-url.ts` exists to prevent.
+4. `next start` reads `PORT` from the environment, not from `.env.local`.
+
+The desk states which rail is live, so a deployed site never differs silently
+from the demo.
 
 1. Set the environment variables above. `NEXT_PUBLIC_*` are inlined at build time.
 2. On a VPS: install `kpass`, authenticate, approve an allowance, set `BROKR_SETTLEMENT_RAIL=auto`.
@@ -228,13 +290,15 @@ src/lib/graph/steps.ts    the 6-step procurement graph
 src/lib/guard.ts          deterministic vendor screening + prompt-injection quarantine
 src/lib/kite/session.ts   Kite Passport session policy engine, atomic spend leases
 src/lib/kite/passport.ts  Kite Passport settlement rail: identity, allowance, payment
+src/lib/kite/passport-bridge.ts  bridge guards: constant-time bearer, host allowlist
+src/app/api/passport/     pay + status, served by a host that has the kpass CLI
 src/lib/kite/x402-buyer.ts    x402 client: 402 challenge, EIP-3009, settlement receipt
 src/lib/kite/x402-server.ts   x402 server for Brokro's own wholesale endpoint
 src/lib/kite/kpass.ts     kpass/ksearch CLI adapter: catalog discovery, environment probe
 src/lib/partners/         external-merchants (real third parties), catalog, reppo, dolphin
 src/lib/serv.ts           SERV Reasoning: prompt_guard, shadow_agent, /v1/responses
 src/lib/public-url.ts     public origin resolution; never advertises a wildcard bind address
-src/lib/__tests__/        18 tests: session policy, guard + verifier, public URL
+src/lib/__tests__/        23 tests: session policy, guard + verifier, public URL, bridge guards
 scripts/settle-external.mjs   reproducible third-party settlement proof
 scripts/kite-diag.mjs     connectivity diagnostics
 ```
