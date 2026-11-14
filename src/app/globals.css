@@ -732,6 +732,22 @@ a {
   padding: 28px 0 44px;
 }
 
+/*
+ * A grid item's `min-width: auto` floor is its min-content size, and the
+ * decision log inside the perimeter column is a four-column table that needs
+ * ~382px before it will wrap. That floor widened the hero's 1fr track past
+ * the stage's own 358px content box, and because every sibling stretches to
+ * the track, the headline, the lede and both CTA buttons were laid out 8px
+ * wider than the viewport. `overflow-x: clip` on <body> then cut that strip
+ * off, so on a 390px phone the buttons lost their right edge and nothing
+ * could be scrolled to reach it.
+ *
+ * Zeroing the floor lets the track shrink back to the column. The log is
+ * already its own `overflow-x: auto` scroller, so the table that caused this
+ * now scrolls inside the log instead of dragging the whole hero wider.
+ */
+.hero-stage-inner > * { min-width: 0; }
+
 @media (max-width: 1040px) {
   .hero-stage-inner {
     grid-template-columns: 1fr;
