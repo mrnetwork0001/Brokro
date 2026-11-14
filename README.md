@@ -4,7 +4,7 @@
 
 Brokro is a procurement desk for AI agents. You write a brief, set a spending ceiling, and the agent shops real `x402` merchants inside that ceiling, cross-examines what they sold it, and **refuses to call the job done when a claim does not match the bytes the merchant actually returned**. Everything is measured by one number: **how much of the dossier survives verification**, because a finding that cannot be traced to a merchant's own response is deleted rather than shipped.
 
-Built for the OpenServ SERV Hackathon Edition 02 · **Track 02 — Kite** · Not affiliated with Kite AI, OpenServ, Otto AI, PrintMoneyLab or IP402 · App: **[trybrokro.vercel.app](https://trybrokro.vercel.app)** · Demo: **[youtu.be/4NYNXsAoUm8](https://youtu.be/4NYNXsAoUm8)** · Code: `github.com/mrnetwork0001/Brokro` (private; access on request)
+Built for the OpenServ SERV Hackathon Edition 02 · **Track 02 — Kite** · Not affiliated with Kite AI, OpenServ, Otto AI, PrintMoneyLab or IP402 · App: **[trybrokro.vercel.app](https://trybrokro.vercel.app)** · Demo: **[youtu.be/4NYNXsAoUm8](https://youtu.be/4NYNXsAoUm8)**
 
 **Judges, start here:** open **[trybrokro.vercel.app/desk](https://trybrokro.vercel.app/desk)**, leave every default alone and press **Execute Bounded Procurement**. The run streams six steps live. The two things worth watching are the vendor that gets quarantined before any signature exists, and the receipt table at the end that names which key paid for each purchase.
 

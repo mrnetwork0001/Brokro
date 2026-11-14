@@ -2,7 +2,7 @@
 
 App: https://trybrokro.vercel.app
 Demo: https://youtu.be/4NYNXsAoUm8
-Code: github.com/mrnetwork0001/Brokro (private; access on request)
+Code: https://github.com/mrnetwork0001/Brokro
 
 Answers to the submission form, kept here so the wording is version-controlled
 rather than retyped into a text box.
